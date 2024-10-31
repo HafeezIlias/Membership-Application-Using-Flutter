@@ -18,21 +18,13 @@ class _RegisterScreenState extends State<RegisterPage> {
 
   bool isEmailAvailable = true;
   bool isUsernameAvailable = true;
+  String?
+      usernameStatus; // Use a String to represent the status of the username
+  String? emailStatus; // Use a String to represent the status of the username
 
   @override
   void initState() {
     super.initState();
-    emailController.addListener(checkEmailAvailability);
-    usernameController.addListener(checkUsernameAvailability);
-  }
-
-  @override
-  void dispose() {
-    emailController.removeListener(checkEmailAvailability);
-    usernameController.removeListener(checkUsernameAvailability);
-    emailController.dispose();
-    usernameController.dispose();
-    super.dispose();
   }
 
   @override
@@ -66,33 +58,47 @@ class _RegisterScreenState extends State<RegisterPage> {
                 ),
                 TextField(
                   controller: usernameController,
+                  onChanged: (value) {
+                    checkUsernameAvailability(
+                        value); // Check availability on input change
+                  },
                   decoration: InputDecoration(
                     labelText: 'Username',
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
-                    suffixIcon: (isUsernameAvailable
-                            ? const Icon(Icons.check_circle,
-                                color: Colors
-                                    .green) // Show green check if available
-                            : const Icon(Icons.error,
-                                color: Colors
-                                    .red) // Show red error if not available
-                        ),
+                    suffixIcon: usernameStatus == null
+                        ? null
+                        : (usernameStatus == "available"
+                            ? Icon(Icons.check_circle, color: Colors.green)
+                            : (usernameStatus == "unavailable"
+                                ? const Icon(Icons.error, color: Colors.red)
+                                : const Icon(Icons.error,
+                                    color: Colors
+                                        .grey))), // Indicate error if applicable
                   ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
+                  onChanged: (value) {
+                    checkEmailAvailability(
+                        value); // Check availability on input change
+                  },
                   decoration: InputDecoration(
                     labelText: 'Email',
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
-                    suffixIcon: isEmailAvailable
-                        ? const Icon(Icons.check_circle, color: Colors.green)
-                        : const Icon(Icons.error, color: Colors.red),
+                    suffixIcon: emailStatus == null
+                        ? null
+                        : (emailStatus == "available"
+                            ? Icon(Icons.check_circle, color: Colors.green)
+                            : (emailStatus == "unavailable"
+                                ? const Icon(Icons.error, color: Colors.red)
+                                : const Icon(Icons.error,
+                                    color: Colors
+                                        .grey))), // Indicate error if applicable
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -229,33 +235,82 @@ class _RegisterScreenState extends State<RegisterPage> {
     }
   }
 
-  Future<void> checkEmailAvailability() async {
-    final email = emailController.text;
-    if (email.isEmpty) return;
+  Future<void> checkEmailAvailability(String email) async {
+    if (email.isEmpty) {
+      setState(() {
+        emailStatus = null; // Reset to null if the input is empty
+      });
+      return; // Exit the function if there's no input
+    }
 
-    final response = await http.post(
-      Uri.parse("${MyConfig.servername}/simple_app/api/check_availability.php"),
-      body: {"email": email},
-    );
+    try {
+      final response = await http.post(
+        Uri.parse("${MyConfig.servername}/simple_app/api/verify_login.php"),
+        body: {"email": email},
+      );
 
-    final data = jsonDecode(response.body);
-    setState(() {
-      isEmailAvailable = data['status'] == "available";
-    });
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        if (data['email'] != null && data['email']['status'] == 'success') {
+          setState(() {
+            emailStatus = "unavailable"; // Username is not available
+          });
+        } else {
+          setState(() {
+            emailStatus = "available"; // Username is  available
+          });
+        }
+      } else {
+        // Handle server error
+        setState(() {
+          emailStatus = "error"; // Indicate a server error
+        });
+      }
+    } catch (e) {
+      debugPrint("Error checking email availability: $e");
+      setState(() {
+        emailStatus = "error"; // Indicate a network error
+      });
+    }
   }
 
-  Future<void> checkUsernameAvailability() async {
-    final username = usernameController.text;
-    if (username.isEmpty) return;
+  Future<void> checkUsernameAvailability(String username) async {
+    if (username.isEmpty) {
+      setState(() {
+        usernameStatus = null; // Reset to null if the input is empty
+      });
+      return; // Exit the function if there's no input
+    }
 
-    final response = await http.post(
-      Uri.parse("${MyConfig.servername}/simple_app/api/check_availability.php"),
-      body: {"username": username},
-    );
+    try {
+      final response = await http.post(
+        Uri.parse("${MyConfig.servername}/simple_app/api/verify_login.php"),
+        body: {"username": username},
+      );
 
-    final data = jsonDecode(response.body);
-    setState(() {
-      isUsernameAvailable = data['status'] == "available";
-    });
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        if (data['username'] != null &&
+            data['username']['status'] == 'success') {
+          setState(() {
+            usernameStatus = "unavailable"; // Username is not available
+          });
+        } else {
+          setState(() {
+            usernameStatus = "available"; // Username is  available
+          });
+        }
+      } else {
+        // Handle server error
+        setState(() {
+          usernameStatus = "error"; // Indicate a server error
+        });
+      }
+    } catch (e) {
+      debugPrint("Error checking username availability: $e");
+      setState(() {
+        usernameStatus = "error"; // Indicate a network error
+      });
+    }
   }
 }
