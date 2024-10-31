@@ -16,8 +16,6 @@ class _RegisterScreenState extends State<RegisterPage> {
   TextEditingController usernameController = TextEditingController();
   TextEditingController phoneNumberController = TextEditingController();
 
-  bool isEmailAvailable = true;
-  bool isUsernameAvailable = true;
   String?
       usernameStatus; // Use a String to represent the status of the username
   String? emailStatus; // Use a String to represent the status of the username
