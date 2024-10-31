@@ -256,6 +256,10 @@ class _LoginPageState extends State<LoginPage> {
           _updateVerificationStatus('Verified', Colors.green);
         } else {
           _updateVerificationStatus('Not Exist', Colors.red);
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Email or Username not exist'),
+        backgroundColor: Colors.red,
+      ));
         }
       } else {
         _updateVerificationStatus('Server error', Colors.red);
