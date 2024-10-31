@@ -16,8 +16,8 @@ class _RegisterScreenState extends State<RegisterPage> {
   TextEditingController usernameController = TextEditingController();
   TextEditingController phoneNumberController = TextEditingController();
 
-  String? usernameStatus; // Use a String to represent the status of the username
-  String? emailStatus; // Use a String to represent the status of the username
+  String? usernameStatus; // status of the username
+  String? emailStatus; // status of the email
 
   @override
   void initState() {
