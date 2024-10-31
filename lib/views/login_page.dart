@@ -17,6 +17,8 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController emailcontroller = TextEditingController();
   TextEditingController passwordcontroller = TextEditingController();
   bool rememberme = false;
+  String verificationMessage = '';
+  Color verificationColor = Colors.black;
 
   @override
   void initState() {
@@ -52,15 +54,31 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              TextField(
-                  controller: emailcontroller,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
-                  )),
+               TextField(
+                controller: emailcontroller,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                  suffixIcon: verificationMessage.isNotEmpty
+                      ? Icon(
+                          verificationMessage == 'Email is verified'
+                              ? Icons.check_circle
+                              : Icons.error,
+                          color: verificationColor,
+                        )
+                      : null,
+                ),
+                onChanged: (value) {
+                  if (value.isNotEmpty) {
+                    verifyEmail(value); // Verify email on input change
+                  } else {
+                    _updateVerificationStatus('', Colors.black); // Reset on empty input
+                  }
+                },
+              ),
               const SizedBox(
                 height: 10,
               ),
@@ -158,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
         if (data['status'] == "success") {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Login Success"),
-            backgroundColor: Color.fromARGB(255, 12, 12, 12),
+            backgroundColor: Colors.green,
           ));
           Navigator.pushReplacement(
             context,
@@ -212,4 +230,36 @@ class _LoginPageState extends State<LoginPage> {
     rememberme = prefs.getBool("rememberme") ?? false;
     setState(() {});
   }
+  Future<void> verifyEmail(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse("${MyConfig.servername}/simple_app/api/verify_email.php"),
+        body: {"email": email},
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          _updateVerificationStatus('Email is verified', Colors.green);
+        } else {
+          _updateVerificationStatus('Email does not exist', Colors.red);
+        }
+      } else {
+        _updateVerificationStatus('Server error', Colors.red);
+        print('server error');
+      }
+    } catch (e) {
+      debugPrint("Error: $e");
+      _updateVerificationStatus('Network error', Colors.red);
+    }
+  }
+
+  // Method to update verification status
+  void _updateVerificationStatus(String message, Color color) {
+    setState(() {
+      verificationMessage = message;
+      verificationColor = color;
+    });
+  }
+
 }
