@@ -1,3 +1,3 @@
 # simple_app
 
-A new Flutter project.
+This app is for my Assignment 1 for subject Web Mobile App Developement 
