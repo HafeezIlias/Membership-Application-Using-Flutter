@@ -54,17 +54,17 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-               TextField(
+              TextField(
                 controller: emailcontroller,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  labelText: 'Email',
+                  labelText: 'Email/Username',
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                   suffixIcon: verificationMessage.isNotEmpty
                       ? Icon(
-                          verificationMessage == 'Email is verified'
+                          verificationMessage == 'Verified'
                               ? Icons.check_circle
                               : Icons.error,
                           color: verificationColor,
@@ -73,9 +73,11 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 onChanged: (value) {
                   if (value.isNotEmpty) {
-                    verifyEmail(value); // Verify email on input change
+                    verifyIdentifier(
+                        value); // Verify email or username on input change
                   } else {
-                    _updateVerificationStatus('', Colors.black); // Reset on empty input
+                    _updateVerificationStatus(
+                        '', Colors.black); // Reset on empty input
                   }
                 },
               ),
@@ -155,12 +157,12 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void onLogin() async {
-    String email = emailcontroller.text;
+    String identifier = emailcontroller.text; // Either email or username
     String password = passwordcontroller.text;
 
-    if (email.isEmpty || password.isEmpty) {
+    if (identifier.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Please enter email and password"),
+        content: Text("Please enter email/username and password"),
       ));
       return;
     }
@@ -168,9 +170,12 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final response = await http.post(
         Uri.parse("${MyConfig.servername}/simple_app/api/login_user.php"),
-        body: {"email": email, "password": password},
-        
+        body: {
+          "identifier": identifier,
+          "password": password
+        }, // Use 'identifier' instead of 'email'
       );
+
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         if (data['status'] == "success") {
@@ -194,7 +199,7 @@ class _LoginPageState extends State<LoginPage> {
         content: Text("Network error. Please try again."),
         backgroundColor: Colors.red,
       ));
-   }
+    }
   }
 
   void storeSharedPrefs(bool value, String email, String pass) async {
@@ -230,23 +235,30 @@ class _LoginPageState extends State<LoginPage> {
     rememberme = prefs.getBool("rememberme") ?? false;
     setState(() {});
   }
-  Future<void> verifyEmail(String email) async {
+
+// Updated method to verify email or username
+  Future<void> verifyIdentifier(String value) async {
+    bool isEmail = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+        .hasMatch(value);
+
     try {
       final response = await http.post(
-        Uri.parse("${MyConfig.servername}/simple_app/api/verify_email.php"),
-        body: {"email": email},
+        Uri.parse("${MyConfig.servername}/simple_app/api/verify_login.php"),
+        body: isEmail ? {"email": value} : {"username": value},
       );
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
-        if (data['status'] == 'success') {
-          _updateVerificationStatus('Email is verified', Colors.green);
+
+        if (isEmail && data['email']['status'] == 'success') {
+          _updateVerificationStatus('Verified', Colors.green);
+        } else if (!isEmail && data['username']['status'] == 'success') {
+          _updateVerificationStatus('Verified', Colors.green);
         } else {
-          _updateVerificationStatus('Email does not exist', Colors.red);
+          _updateVerificationStatus('Not Exist', Colors.red);
         }
       } else {
         _updateVerificationStatus('Server error', Colors.red);
-        print('server error');
       }
     } catch (e) {
       debugPrint("Error: $e");
@@ -254,12 +266,11 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // Method to update verification status
+// Method to update verification status
   void _updateVerificationStatus(String message, Color color) {
     setState(() {
       verificationMessage = message;
       verificationColor = color;
     });
   }
-
 }

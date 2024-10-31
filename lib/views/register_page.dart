@@ -16,6 +16,25 @@ class _RegisterScreenState extends State<RegisterPage> {
   TextEditingController usernameController = TextEditingController();
   TextEditingController phoneNumberController = TextEditingController();
 
+  bool isEmailAvailable = true;
+  bool isUsernameAvailable = true;
+
+  @override
+  void initState() {
+    super.initState();
+    emailController.addListener(checkEmailAvailability);
+    usernameController.addListener(checkUsernameAvailability);
+  }
+
+  @override
+  void dispose() {
+    emailController.removeListener(checkEmailAvailability);
+    usernameController.removeListener(checkUsernameAvailability);
+    emailController.dispose();
+    usernameController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,22 +65,34 @@ class _RegisterScreenState extends State<RegisterPage> {
                   ),
                 ),
                 TextField(
-                    controller: usernameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Username',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                    )),
+                  controller: usernameController,
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                    suffixIcon: (isUsernameAvailable
+                            ? const Icon(Icons.check_circle,
+                                color: Colors
+                                    .green) // Show green check if available
+                            : const Icon(Icons.error,
+                                color: Colors
+                                    .red) // Show red error if not available
+                        ),
+                  ),
+                ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Email',
-                    border: OutlineInputBorder(
+                    border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
+                    suffixIcon: isEmailAvailable
+                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        : const Icon(Icons.error, color: Colors.red),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -114,7 +145,10 @@ class _RegisterScreenState extends State<RegisterPage> {
     String username = usernameController.text;
     String phoneNumber = phoneNumberController.text;
 
-    if (email.isEmpty || password.isEmpty || username.isEmpty || phoneNumber.isEmpty) {
+    if (email.isEmpty ||
+        password.isEmpty ||
+        username.isEmpty ||
+        phoneNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Please enter all credentials"),
         backgroundColor: Colors.red,
@@ -173,16 +207,13 @@ class _RegisterScreenState extends State<RegisterPage> {
           "phoneNum": phoneNumber
         },
       );
-       print('this is response');
-       print('');
-       print(response.body);
       var data = jsonDecode(response.body);
       if (response.statusCode == 200 && data['status'] == "success") {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("Registration Successful"),
           backgroundColor: Colors.green,
         ));
-        Navigator.pop(context);  // Go back to login screen
+        Navigator.pop(context); // Go back to login screen
       } else {
         // Show specific server error message (e.g., duplicate email/username)
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -194,8 +225,37 @@ class _RegisterScreenState extends State<RegisterPage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Network error. Please try again."),
         backgroundColor: Colors.red,
-        
       ));
     }
+  }
+
+  Future<void> checkEmailAvailability() async {
+    final email = emailController.text;
+    if (email.isEmpty) return;
+
+    final response = await http.post(
+      Uri.parse("${MyConfig.servername}/simple_app/api/check_availability.php"),
+      body: {"email": email},
+    );
+
+    final data = jsonDecode(response.body);
+    setState(() {
+      isEmailAvailable = data['status'] == "available";
+    });
+  }
+
+  Future<void> checkUsernameAvailability() async {
+    final username = usernameController.text;
+    if (username.isEmpty) return;
+
+    final response = await http.post(
+      Uri.parse("${MyConfig.servername}/simple_app/api/check_availability.php"),
+      body: {"username": username},
+    );
+
+    final data = jsonDecode(response.body);
+    setState(() {
+      isUsernameAvailable = data['status'] == "available";
+    });
   }
 }
