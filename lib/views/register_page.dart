@@ -32,18 +32,10 @@ class _RegisterScreenState extends State<RegisterPage> {
 
   bool isPasswordVisible = false;
 
-  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-  }
-
-    @override
-  void dispose() {
-    // Cancel the debounce timer if it’s still running
-    _debounce?.cancel();
-    super.dispose();
   }
 
   @override
@@ -89,7 +81,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                     suffixIcon: usernameStatus == null
                         ? null
                         : (usernameStatus == "available"
-                            ? Icon(Icons.check_circle, color: Colors.green)
+                            ? const Icon(Icons.check_circle, color: Colors.green)
                             : (usernameStatus == "unavailable"
                                 ? const Icon(Icons.error, color: Colors.red)
                                 : const Icon(Icons.error,
@@ -340,8 +332,7 @@ Future<void> checkEmailAvailability(String email) async {
     return;
   }
 
-  // Regular expression for email format validation
-  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  // Regular expression for email format validation  
   if (!emailRegex.hasMatch(email)) {
     // Update status to invalid format
     setState(() {

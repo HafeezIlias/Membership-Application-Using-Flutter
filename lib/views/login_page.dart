@@ -20,6 +20,9 @@ class _LoginPageState extends State<LoginPage> {
   String verificationMessage = '';
   Color verificationColor = Colors.black;
 
+  String lastSnackBarMessage = '';
+
+
   @override
   void initState() {
     super.initState();
@@ -239,7 +242,7 @@ class _LoginPageState extends State<LoginPage> {
 // Updated method to verify email or username
   Future<void> verifyIdentifier(String value) async {
     bool isEmail = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-        .hasMatch(value);
+        .hasMatch(value); // checking if it follow format of email
 
     try {
       final response = await http.post(
@@ -252,23 +255,43 @@ class _LoginPageState extends State<LoginPage> {
 
         if (isEmail && data['email']['status'] == 'success') {
           _updateVerificationStatus('Verified', Colors.green);
+          lastSnackBarMessage = ''; // Reset since it's a success
         } else if (!isEmail && data['username']['status'] == 'success') {
           _updateVerificationStatus('Verified', Colors.green);
+          lastSnackBarMessage = ''; // Reset since it's a success
         } else {
           _updateVerificationStatus('Not Exist', Colors.red);
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Email or Username not exist'),
-        backgroundColor: Colors.red,
-      ));
+          if (lastSnackBarMessage != 'Email or Username not exist') {
+            lastSnackBarMessage = 'Email or Username not exist';
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Email or Username not exist'),
+              backgroundColor: Colors.red,
+            ));
+          }
         }
       } else {
         _updateVerificationStatus('Server error', Colors.red);
+        if (lastSnackBarMessage != 'Server error') {
+          lastSnackBarMessage = 'Server error';
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Server error'),
+            backgroundColor: Colors.red,
+          ));
+        }
       }
     } catch (e) {
       debugPrint("Error: $e");
       _updateVerificationStatus('Network error', Colors.red);
+      if (lastSnackBarMessage != 'Network error') {
+        lastSnackBarMessage = 'Network error';
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Network error'),
+          backgroundColor: Colors.red,
+        ));
+      }
     }
   }
+
 
 // Method to update verification status
   void _updateVerificationStatus(String message, Color color) {
