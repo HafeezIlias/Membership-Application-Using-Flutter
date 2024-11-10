@@ -2,7 +2,7 @@
 $servername = "localhost";
 $username   = "root";
 $password   = "";
-$dbname     = "simple_app_db";
+$dbname     = "memberlink_b2";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {
