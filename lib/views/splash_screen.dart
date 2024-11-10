@@ -35,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Image.asset('assets/Logo Simple App.png',
               height: 150,
               width: 200,
-              color: const Color.fromARGB(255, 253, 157, 2)),
+              ),
             const SizedBox(height: 20),
             const CircularProgressIndicator(
               color: Color.fromARGB(255, 255, 255, 255),

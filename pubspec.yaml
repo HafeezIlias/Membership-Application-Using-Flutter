@@ -7,8 +7,11 @@ environment:
   sdk: ^3.5.3
 
 dependencies:
+  email_auth: ^2.0.0
+  email_otp: ^3.0.2
   flutter:
     sdk: flutter
+  fluttertoast: ^8.2.8
   http: ^1.2.2
   shared_preferences: ^2.3.2
 

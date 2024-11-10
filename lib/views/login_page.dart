@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:email_otp/email_otp.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:simple_app/myconfig.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,8 +16,15 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+
   TextEditingController emailcontroller = TextEditingController();
   TextEditingController passwordcontroller = TextEditingController();
+  TextEditingController otpController = TextEditingController();
+  TextEditingController newPasswordController = TextEditingController();
+  late bool isOtpSent = false;
+  String userEmail = '';
+
+
   bool rememberme = false;
   String verificationMessage = '';
   Color verificationColor = Colors.black;
@@ -42,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
                 'assets/Logo Simple App.png',
                 height: 150,
                 width: 200,
-                color: const Color.fromARGB(255, 253, 157, 2),
+                
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 15, bottom: 15),
@@ -61,6 +70,8 @@ class _LoginPageState extends State<LoginPage> {
                 controller: emailcontroller,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.email),
+                  prefixIconColor: const Color.fromARGB(255, 253, 157, 2),
                   labelText: 'Email/Username',
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -91,6 +102,8 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: true,
                 controller: passwordcontroller,
                 decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.lock),
+                  prefixIconColor: Color.fromARGB(255, 253, 157, 2),
                   labelText: 'Password',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -138,8 +151,52 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextStyle(color: Colors.white))),
               ),
               GestureDetector(
-                child: const Text("Forgot Password?"),
-              ),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text("Forgot Password"),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: emailcontroller,
+                        decoration: const InputDecoration(labelText: 'Enter your email'),
+                      ),
+                      if (isOtpSent)
+                        Column(
+                          children: [
+                            TextField(
+                              controller: otpController,
+                              decoration: const InputDecoration(labelText: 'Enter OTP'),
+                            ),
+                            TextField(
+                              controller: newPasswordController,
+                              decoration: const InputDecoration(labelText: 'New Password'),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () async {
+                        if (!isOtpSent) {
+                          sendOtp(emailcontroller.text);
+                        } else {
+                          verifyOtpAndResetPassword();
+                        }
+                      },
+                      child: Text(isOtpSent ? "Verify and Reset Password" : "Send OTP"),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+          child: const Text("Forgot Password?"),
+        ),            
               const SizedBox(
                 height: 20,
               ),
@@ -300,4 +357,52 @@ class _LoginPageState extends State<LoginPage> {
       verificationColor = color;
     });
   }
+  void sendOtp(email) async {
+    EmailOTP.config(
+      appName: "MyMemberLink",
+      otpLength: 6,
+    );
+
+    bool sent = await EmailOTP.sendOTP(email: email);
+    if (sent) {
+      setState(() {
+        isOtpSent = true;
+        userEmail = email;
+      });
+      Fluttertoast.showToast(msg: "OTP has been sent to $email");
+    } else {
+      Fluttertoast.showToast(msg: "Failed to send OTP");
+    }
+  }
+
+  void verifyOtpAndResetPassword() async {
+    final otp = otpController.text.trim();
+    final newPassword = newPasswordController.text.trim();
+
+    bool isVerified = EmailOTP.verifyOTP(otp: otp);
+    if (isVerified) {
+      // Call PHP API to reset password
+      resetPassword(userEmail, newPassword);
+    } else {
+      Fluttertoast.showToast(msg: "Invalid OTP. Please try again.");
+    }
+  }
+
+  void resetPassword(String email, String newPassword) async {
+    final response = await http.post(
+      Uri.parse('${MyConfig.servername}/simple_app/api/reset_password.php'),
+      body: {
+        "email": email,
+        "new_password": newPassword,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      var responseData = jsonDecode(response.body);
+      Fluttertoast.showToast(msg: responseData['message']);
+    } else {
+      Fluttertoast.showToast(msg: "Failed to connect to the server.");
+    }
+  }
+
 }

@@ -51,8 +51,7 @@ class _RegisterScreenState extends State<RegisterPage> {
                 Image.asset(
                   'assets/Logo Simple App.png',
                   height: 150,
-                  width: 200,
-                  color: const Color.fromARGB(255, 253, 157, 2),
+                  width: 200,                 
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 15, bottom: 15),
@@ -74,6 +73,8 @@ class _RegisterScreenState extends State<RegisterPage> {
                         value); // Check availability on input change
                   },
                   decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.person),
+                    prefixIconColor: const Color.fromARGB(255, 253, 157, 2),
                     labelText: 'Username',
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -116,6 +117,8 @@ class _RegisterScreenState extends State<RegisterPage> {
     }
   },
   decoration: InputDecoration(
+    prefixIcon: const Icon(Icons.email),
+    prefixIconColor: const Color.fromARGB(255, 253, 157, 2),
     labelText: 'Email',
     border: const OutlineInputBorder(
       borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -155,6 +158,8 @@ class _RegisterScreenState extends State<RegisterPage> {
                     }
                   },
                   decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.phone),
+                    prefixIconColor: const Color.fromARGB(255, 253, 157, 2),
                     labelText: 'Phone Number',
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -181,6 +186,8 @@ class _RegisterScreenState extends State<RegisterPage> {
             FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')), // Allows only alphanumeric characters
           ],
           decoration: InputDecoration(
+            prefix: const Icon(Icons.lock),
+            prefixIconColor: const Color.fromARGB(255, 253, 157, 2),
             labelText: 'Password',
             border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10)),
