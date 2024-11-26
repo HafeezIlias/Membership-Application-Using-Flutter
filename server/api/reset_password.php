@@ -1,45 +1,33 @@
 <?php
-// Include database connection
+if (!isset($_POST)) {
+    $response = array('status' => 'failed', 'data' => null);
+    sendJsonResponse($response);
+    die;
+}
 include_once("dbconnect.php");
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Retrieve the email and new password from the request
-    $email = $_POST['email'];
-    $new_password = $_POST['new_password'];
 
-    // Sanitize inputs
-    $email = filter_var($email, FILTER_SANITIZE_EMAIL);
-    $new_password = filter_var($new_password, FILTER_SANITIZE_STRING);
+    // Get the email and new password from POST data
+    $email = $_POST['email'];
+    $new_password = sha1($_POST['new_password']);
 
     // Check if the user exists
-    $sql = "SELECT * FROM users WHERE email = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $query = "SELECT * FROM tbl_user WHERE user_email = '$email'";
+    $result = $conn->query($query);
 
     if ($result->num_rows > 0) {
-        // Hash the new password for security
-        $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
-
         // Update the password in the database
-        $update_sql = "UPDATE users SET password = ? WHERE email = ?";
-        $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("ss", $hashed_password, $email);
-
-        if ($update_stmt->execute()) {
-            echo json_encode(array("success" => true, "message" => "Password reset successful."));
+        $update_query = "UPDATE tbl_user SET user_pass = '$new_password' WHERE user_email = '$email'";
+        if ($conn->query($update_query) === TRUE) {
+            echo json_encode(["status" => "success", "message" => "Password updated successfully."]);
         } else {
-            echo json_encode(array("success" => false, "message" => "Error updating password. Please try again."));
+            echo json_encode(["status" => "error", "message" => "Failed to update the password."]);
         }
     } else {
-        echo json_encode(array("success" => false, "message" => "Email not found."));
+        echo json_encode(["status" => "error", "message" => "User not found."]);
     }
 
-    $stmt->close();
-    $update_stmt->close();
-    $conn->close();
-} else {
-    echo json_encode(array("success" => false, "message" => "Invalid request method."));
-}
+
+// Close the database connection
+$conn->close();
 ?>

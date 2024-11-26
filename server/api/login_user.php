@@ -9,7 +9,7 @@ include_once("dbconnect.php");
 
 // Retrieve identifier and password from the POST request
 $identifier = $_POST['identifier']; // Can be email or username
-$password = $_POST['password'];
+$password = sha1($_POST['password']); // Hash the password$_POST['password'];
 
 // SQL query to check for either email or username match
 $sqllogin = "SELECT `user_email`, `user_username`, `user_pass` FROM `tbl_user` 

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:simple_app/myconfig.dart';
 import 'dart:async';
+import 'package:google_sign_in/google_sign_in.dart';
 
 
 class RegisterPage extends StatefulWidget {
@@ -24,6 +25,7 @@ class _RegisterScreenState extends State<RegisterPage> {
   final phoneRegex = RegExp(r"^\+?[0-9]{10,14}$"); //phone number format
   final passwordRegex = RegExp(
       r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6}$'); //password format which only allow letter and umber
+final GoogleSignIn googleSignIn = GoogleSignIn();
 
   String? usernameStatus; // status of the username
   String? emailStatus; // status of the email
@@ -232,6 +234,11 @@ class _RegisterScreenState extends State<RegisterPage> {
                   },
                   child: const Text("Already registered? Login"),
                 ),
+                ElevatedButton(
+  onPressed: registerWithGoogle,
+  child: Text('Register with Google'),
+),
+
               ],
             ),
           ),
@@ -449,5 +456,29 @@ Future<void> checkEmailAvailability(String email) async {
       }
     });
   }
-  
+  Future<void> registerWithGoogle() async {
+  try {
+    final GoogleSignInAccount? account = await googleSignIn.signIn();
+    if (account != null) {
+      final GoogleSignInAuthentication auth = await account.authentication;
+
+      // Send the ID token to your backend for registration
+      final response = await http.post(
+        Uri.parse('${MyConfig.servername}/simple_app/api/google_register.php'),
+        body: {
+          'id_token': auth.idToken,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('Registration successful: ${response.body}');
+      } else {
+        print('Registration failed: ${response.body}');
+      }
+    }
+  } catch (error) {
+    print('Error during Google registration: $error');
+  }
+}
+
 }

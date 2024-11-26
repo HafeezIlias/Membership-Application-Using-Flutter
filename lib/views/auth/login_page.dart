@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'package:email_otp/email_otp.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:simple_app/myconfig.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:simple_app/views/main_page.dart';
-import 'package:simple_app/views/register_page.dart';
+import 'package:simple_app/views/auth/register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,9 +21,9 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController otpController = TextEditingController();
   TextEditingController newPasswordController = TextEditingController();
   late bool isOtpSent = false;
+  bool isPasswordVisible = false;
   String userEmail = '';
-
-
+  
   bool rememberme = false;
   String verificationMessage = '';
   Color verificationColor = Colors.black;
@@ -99,26 +98,45 @@ class _LoginPageState extends State<LoginPage> {
                 height: 10,
               ),
               TextField(
-                obscureText: true,
+                obscureText: !isPasswordVisible,
                 controller: passwordcontroller,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.lock),
-                  prefixIconColor: Color.fromARGB(255, 253, 157, 2),
+                decoration:  InputDecoration(
+                  prefixIcon: const Icon(Icons.lock),
+                  prefixIconColor: const Color.fromARGB(255, 253, 157, 2),
                   labelText: 'Password',
-                  border: OutlineInputBorder(
+                  border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
-                ),
+                  suffixIcon: GestureDetector(
+              onLongPress: () {
+                setState(() {
+                  isPasswordVisible = true;
+                });
+              },
+              onLongPressUp: () {
+                setState(() {
+                  isPasswordVisible = false;
+                });
+              },
+              child: Icon(
+                isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                color: Colors.grey,
+              ),
+                  ),                 
+                ),                
               ),
               Row(
                 children: [
                   const Text("Remember me"),
                   Checkbox(
+                    activeColor: const Color.fromARGB(255, 253, 157, 2),
+
                     value: rememberme,
                     onChanged: (bool? value) {
                       setState(() {
                         rememberme = value ?? false;
                         if (rememberme) {
+                          
                           if (emailcontroller.text.isNotEmpty &&
                               passwordcontroller.text.isNotEmpty) {
                             storeSharedPrefs(rememberme, emailcontroller.text,
@@ -149,54 +167,13 @@ class _LoginPageState extends State<LoginPage> {
                     color: const Color.fromARGB(255, 253, 157, 2),
                     child: const Text("Login",
                         style: TextStyle(color: Colors.white))),
-              ),
+              ),            
               GestureDetector(
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (context) {
-                return AlertDialog(
-                  title: const Text("Forgot Password"),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: emailcontroller,
-                        decoration: const InputDecoration(labelText: 'Enter your email'),
-                      ),
-                      if (isOtpSent)
-                        Column(
-                          children: [
-                            TextField(
-                              controller: otpController,
-                              decoration: const InputDecoration(labelText: 'Enter OTP'),
-                            ),
-                            TextField(
-                              controller: newPasswordController,
-                              decoration: const InputDecoration(labelText: 'New Password'),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () async {
-                        if (!isOtpSent) {
-                          sendOtp(emailcontroller.text);
-                        } else {
-                          verifyOtpAndResetPassword();
-                        }
-                      },
-                      child: Text(isOtpSent ? "Verify and Reset Password" : "Send OTP"),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-          child: const Text("Forgot Password?"),
-        ),            
+                onTap: () {
+                  showEmailInputDialog();
+                },
+                child: const Text("Forgot Password",),
+              ),            
               const SizedBox(
                 height: 20,
               ),
@@ -357,52 +334,162 @@ class _LoginPageState extends State<LoginPage> {
       verificationColor = color;
     });
   }
-  void sendOtp(email) async {
-    EmailOTP.config(
-      appName: "MyMemberLink",
-      otpLength: 6,
-    );
-
-    bool sent = await EmailOTP.sendOTP(email: email);
-    if (sent) {
-      setState(() {
-        isOtpSent = true;
-        userEmail = email;
-      });
-      Fluttertoast.showToast(msg: "OTP has been sent to $email");
-    } else {
-      Fluttertoast.showToast(msg: "Failed to send OTP");
-    }
-  }
-
-  void verifyOtpAndResetPassword() async {
-    final otp = otpController.text.trim();
-    final newPassword = newPasswordController.text.trim();
-
-    bool isVerified = EmailOTP.verifyOTP(otp: otp);
-    if (isVerified) {
-      // Call PHP API to reset password
-      resetPassword(userEmail, newPassword);
-    } else {
-      Fluttertoast.showToast(msg: "Invalid OTP. Please try again.");
-    }
-  }
-
-  void resetPassword(String email, String newPassword) async {
-    final response = await http.post(
-      Uri.parse('${MyConfig.servername}/simple_app/api/reset_password.php'),
-      body: {
-        "email": email,
-        "new_password": newPassword,
+void showEmailInputDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Forgot Password"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: emailcontroller,
+                decoration: const InputDecoration(labelText: 'Enter your email'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                sendOtp(emailcontroller.text);
+              },
+              child: const Text("Send OTP"),
+            ),
+          ],
+        );
       },
     );
-
-    if (response.statusCode == 200) {
-      var responseData = jsonDecode(response.body);
-      Fluttertoast.showToast(msg: responseData['message']);
+  }
+  Future<void> sendOtp(String email) async {
+    // Simulate sending OTP
+    EmailOTP.config(
+    appName: 'MyMemberLink',
+    otpType: OTPType.numeric,
+    emailTheme: EmailTheme.v4,
+  );
+  if (await EmailOTP.sendOTP(email: emailcontroller.text)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("OTP has been sent")));                   
+                    showOtpAndResetDialog();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("OTP failed sent")));
+              }
+  }
+            
+  void showOtpAndResetDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Reset Password"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: otpController,
+                decoration: const InputDecoration(labelText: 'Enter OTP'),
+              ),
+              TextField(
+                controller: newPasswordController,
+                decoration: const InputDecoration(labelText: 'New Password'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                verifyOtpAndResetPassword();
+              },
+              child: const Text("Verify and Reset Password"),
+            ),
+          ],
+        );
+      },
+    );
+  
+  }
+  Future<void> verifyOtpAndResetPassword() async {
+    bool isValid = EmailOTP.verifyOTP(otp: otpController.text);
+    if (isValid) {
+      updateNewPassword();
+      Navigator.of(context).pop();     
     } else {
-      Fluttertoast.showToast(msg: "Failed to connect to the server.");
+      showErrorDialog("Invalid OTP. Please try again.");
     }
   }
+void showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Success"),
+          content: const Text("Your password has been reset successfully."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Error"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  void updateNewPassword() async {
+
+    final String email = emailcontroller.text;
+    final String newPassword = newPasswordController.text;
+
+     try {
+      final response = await http.post(
+        Uri.parse("${MyConfig.servername}/simple_app/api/reset_password.php"),
+        body: {
+          "email": email,
+          "new_password": newPassword
+        },
+      );
+      var data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == "success") {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Update New Password Successful"),
+          backgroundColor: Colors.green,
+        ));
+        showSuccessDialog();  // Go back to login screen
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(data['message'] ?? "Update failed"),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Network error. Please try again."),
+        backgroundColor: Colors.red,
+      ));
+    }
+  
+  }
 }

@@ -8,7 +8,7 @@ if (!isset($_POST)) {
 include_once("dbconnect.php");
 
 $email = $_POST['email'];
-$password = $_POST['password'];
+$password = sha1($_POST['password']); // Hash the password$_POST['password'];
 $phonenumber = $_POST['phoneNum'];
 $username = $_POST['username'];
 
