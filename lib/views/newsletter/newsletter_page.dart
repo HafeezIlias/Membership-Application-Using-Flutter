@@ -64,7 +64,6 @@ class _NewsletterPageState extends State<NewsletterPage> {
                         // Highlight the current page
                         color =
                             (curpage - 1 == index) ? Colors.red : Colors.black;
-
                         return TextButton(
                           onPressed: () {
                             setState(() {
@@ -117,7 +116,7 @@ class _NewsletterPageState extends State<NewsletterPage> {
                                 textAlign: TextAlign.justify,
                               ),
 
-                              // leading: const Icon(Icons.article),
+                             //leading: const Icon(Icons.article),
                               trailing: IconButton(
                                 icon: const Icon(
                                   Icons.arrow_forward,
@@ -130,34 +129,8 @@ class _NewsletterPageState extends State<NewsletterPage> {
                           );
                         }),
                   ),
-                  SizedBox(
-                    height: screenHeight * 0.05,
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: numofpage,
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (context, index) {
-                        //build the list for textbutton with scroll
-                        if ((curpage - 1) == index) {
-                          //set current page number active
-                          color = Colors.red;
-                        } else {
-                          color = Colors.black;
-                        }
-                        return TextButton(
-                            onPressed: () {
-                              curpage = index + 1;
-                              loadNewsData();
-                            },
-                            child: Text(
-                              (index + 1).toString(),
-                              style: TextStyle(color: color, fontSize: 18),
-                            ));
-                      },
-                    ),
-                  ),
                 ],
-              ),
+             ),
         drawer: const MyDrawer(),
         floatingActionButton: FloatingActionButton(
           backgroundColor: const Color.fromARGB(255, 255, 213, 75),
@@ -221,9 +194,7 @@ class _NewsletterPageState extends State<NewsletterPage> {
       print("Error: Index $index is out of bounds for newsList");
       return;
     }
-
     News news = newsList[index];
-
     showDialog(
       context: context,
       builder: (context) {
