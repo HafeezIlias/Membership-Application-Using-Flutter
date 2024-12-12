@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:simple_app/views/main_page.dart';
 import 'package:simple_app/views/auth/register_page.dart';
+import 'package:simple_app/views/shared/mydrawer.dart';
+import 'package:simple_app/global.dart' as globals;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,13 +25,13 @@ class _LoginPageState extends State<LoginPage> {
   late bool isOtpSent = false;
   bool isPasswordVisible = false;
   String userEmail = '';
-  
+
   bool rememberme = false;
   String verificationMessage = '';
   Color verificationColor = Colors.black;
 
   String lastSnackBarMessage = '';
-
+  String username='';
 
   @override
   void initState() {
@@ -49,8 +51,7 @@ class _LoginPageState extends State<LoginPage> {
               Image.asset(
                 'assets/Logo Simple App.png',
                 height: 150,
-                width: 200,
-                
+                width: 200,                
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 15, bottom: 15),
@@ -194,50 +195,73 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void onLogin() async {
-    String identifier = emailcontroller.text; // Either email or username
-    String password = passwordcontroller.text;
+  String identifier = emailcontroller.text; // Either email or username
+  String password = passwordcontroller.text;
 
-    if (identifier.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Please enter email/username and password"),
-      ));
-      return;
-    }
+  if (identifier.isEmpty || password.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text("Please enter email/username and password"),
+    ));
+    return;
+  }
 
-    try {
-      final response = await http.post(
-        Uri.parse("${MyConfig.servername}/simple_app/api/login_user.php"),
-        body: {
-          "identifier": identifier,
-          "password": password
-        }, // Use 'identifier' instead of 'email'
-      );
+  try {
+    final response = await http
+        .post(
+          Uri.parse("${MyConfig.servername}/simple_app/api/login_user.php"),
+          body: {
+            "identifier": identifier,
+            "password": password
+          }, // Use 'identifier' instead of 'email'
+        )
+        .timeout(const Duration(seconds: 10)); // Set a timeout for the request
 
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        if (data['status'] == "success") {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Login Success"),
-            backgroundColor: Colors.green,
-          ));
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (content) => const MainPage()),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Login Failed"),
-            backgroundColor: Colors.red,
-          ));
-        }
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+if (data['status'] == "success") {
+        // Safely extract user data with null-checks
+        globals.userId = data['data']['user_id'] ?? 'No user ID'; 
+        globals.username = data['data']['username'] ?? 'Guest'; // Fallback if 'user_id' is not present
+        String? usernameFromApi = data['data']['username'];
+        String username = usernameFromApi ?? 'Guest';  // Fallback to 'Guest' if username is null
+        
+        // Print user data
+        print('User ID: ${globals.userId}');
+        print('Username: $username');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Login Success"),
+          backgroundColor: Colors.green,
+        ));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (content) => MainPage(username: username)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Login Failed"),
+          backgroundColor: Colors.red,
+        ));
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Network error. Please try again."),
+    } else {
+      // Handle non-200 response status
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Error: ${response.statusCode} - ${response.body}"),
         backgroundColor: Colors.red,
       ));
     }
+  } catch (e) {
+    // Log error for debugging
+    print("Error during login: $e");
+
+    // Network or timeout error
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text("Network error. Please try again."),
+      backgroundColor: Colors.red,
+    ));
   }
+}
+
+
 
   void storeSharedPrefs(bool value, String email, String pass) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -40,6 +40,7 @@ class _NewsletterPageState extends State<NewsletterPage> {
     return Scaffold(
         appBar: AppBar(
           title: const Text("Newsletter"),
+          backgroundColor: Colors.orangeAccent,
           actions: [
             IconButton(
                 onPressed: () {
@@ -85,7 +86,7 @@ class _NewsletterPageState extends State<NewsletterPage> {
                         itemCount: newsList.length,
                         itemBuilder: (context, index) {
                           return Card(
-                            color: const Color.fromARGB(185, 251, 218, 1),
+                            color: Colors.orangeAccent,
                             elevation: 7,
                             child: ListTile(
                               onLongPress: () {
@@ -131,7 +132,7 @@ class _NewsletterPageState extends State<NewsletterPage> {
                   ),
                 ],
              ),
-        drawer: const MyDrawer(),
+        drawer: const MyDrawer(username: AutofillHints.username,),
         floatingActionButton: FloatingActionButton(
           backgroundColor: const Color.fromARGB(255, 255, 213, 75),
           elevation: 7,
