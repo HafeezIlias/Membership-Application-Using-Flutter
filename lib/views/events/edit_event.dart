@@ -191,8 +191,9 @@ class _EditEventsPageState extends State<EditEventsPage> {
                         validator: (value) =>
                             value!.isEmpty ? "Enter Location" : null,
                         controller: locationController,
-                        decoration: const InputDecoration(
-                            border: OutlineInputBorder(
+                        decoration: InputDecoration(
+                          suffixIcon: IconButton(onPressed: (){}, icon: const Icon(Icons.location_on)),
+                            border: const OutlineInputBorder(                             
                               borderRadius:
                                   BorderRadius.all(Radius.circular(10)),
                             ),

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -173,11 +172,12 @@ class _NewEventsPageState extends State<NewEventsPage> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    TextFormField(
+                    TextFormField(                     
                         validator: (value) =>
                             value!.isEmpty ? "Enter Location" : null,
                         controller: locationController,
-                        decoration: const InputDecoration(
+                        decoration:  InputDecoration(
+                          suffixIcon: IconButton(onPressed: (){}, icon: Icon(Icons.location_on)),
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(10)),
@@ -473,6 +473,20 @@ class _NewEventsPageState extends State<NewEventsPage> {
           ));
         }
       }
+    });
+  }
+
+  void getPositionDialog(){
+    showDialog(context: context, builder: (BuildContext context){
+      return AlertDialog(
+       title: const Text('Get Location From :',style: TextStyle(),),
+       content: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+
+        ],
+       ), 
+      );
     });
   }
 }

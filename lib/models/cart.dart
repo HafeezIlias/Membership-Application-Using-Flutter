@@ -1,4 +1,3 @@
-import 'products.dart';
 
 class CartItem {
   int? cartId;

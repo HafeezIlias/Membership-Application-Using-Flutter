@@ -7,16 +7,20 @@ environment:
   sdk: ^3.5.3
 
 dependencies:
+  custom_rating_bar: ^3.0.0
   email_auth: ^2.0.0
   email_otp: ^3.0.2
   flutter:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.2
   fluttertoast: ^8.2.8
+  google_maps_flutter: ^2.10.0
   google_sign_in: ^6.2.2
   http: ^1.2.2
   image_cropper: ^8.0.2
   image_picker: ^1.1.2
   intl: ^0.20.1
+  latlng: ^2.0.7
   provider: ^6.1.2
   shared_preferences: ^2.3.2
 
@@ -31,3 +35,9 @@ flutter:
     - assets/
 
   uses-material-design: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/Logo Simple APP.png"
+  min_sdk_android: 21

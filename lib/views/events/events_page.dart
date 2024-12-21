@@ -113,7 +113,7 @@ class _EventsPageState extends State<EventsPage> {
                   ),
                 );
               })),
-      drawer: const MyDrawer(username: AutofillHints.username,),
+      drawer: const MyDrawer(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(context,

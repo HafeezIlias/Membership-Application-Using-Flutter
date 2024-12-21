@@ -5,8 +5,10 @@ class Myproduct {
   String? productType;
   String? productFilename;
   String? productDate;
-  double? productPrice; // Changed to int
-  int? productStock; // Changed to int
+  double? productPrice;
+  double? productRating;
+  int? productStock;
+  int? productSold;
 
   Myproduct({
     this.productId,
@@ -17,6 +19,8 @@ class Myproduct {
     this.productDate,
     this.productPrice,
     this.productStock,
+    this.productRating,
+    this.productSold,
   });
 
   Myproduct.fromJson(Map<String, dynamic> json) {
@@ -31,6 +35,9 @@ class Myproduct {
         : null;
     productStock = json['product_stock'] != null
         ? int.tryParse(json['product_stock'].toString())
+        : null;
+    productRating = json['product_rating'] != null
+        ? double.tryParse(json['product_rating'].toString())
         : null;
   }
 

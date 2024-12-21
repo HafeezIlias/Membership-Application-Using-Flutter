@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:simple_app/myconfig.dart';
-import 'dart:async';
 import 'package:google_sign_in/google_sign_in.dart';
-
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,230 +13,155 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterPage> {
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-  TextEditingController usernameController = TextEditingController();
-  TextEditingController phoneNumberController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
 
-  final emailRegex = RegExp(
-      r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"); //email format
-  final phoneRegex = RegExp(r"^\+?[0-9]{10,14}$"); //phone number format
-  final passwordRegex = RegExp(
-      r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6}$'); //password format which only allow letter and umber
-final GoogleSignIn googleSignIn = GoogleSignIn();
+  final emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+  final phoneRegex = RegExp(r"^\+?[0-9]{10,14}$");
+  final passwordRegex = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6}$');
 
-  String? usernameStatus; // status of the username
-  String? emailStatus; // status of the email
+  final GoogleSignIn googleSignIn = GoogleSignIn();
+
+  String? usernameStatus;
+  String? emailStatus;
   String? phoneStatus;
   String? passwordStatus;
 
   bool isPasswordVisible = false;
 
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32.0),
+          padding: const EdgeInsets.all(24.0),
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
                   'assets/Logo Simple App.png',
-                  height: 150,
-                  width: 200,                 
+                  height: 120,
+                  width: 180,
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 15, bottom: 15),
-                  child: Align(
-                    alignment: const AlignmentDirectional(-1, 0),
-                    child: Text(
-                      'Create your Account',
-                      style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w600),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Create Your Account',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
                     ),
                   ),
                 ),
-                TextField(
+                const SizedBox(height: 20),
+
+                // Username Field
+                _buildTextField(
                   controller: usernameController,
-                  onChanged: (value) {
-                    checkUsernameAvailability(
-                        value); // Check availability on input change
-                  },
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.person),
-                    prefixIconColor: const Color.fromARGB(255, 253, 157, 2),
-                    labelText: 'Username',
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
-                    suffixIcon: usernameStatus == null
-                        ? null
-                        : (usernameStatus == "available"
-                            ? const Icon(Icons.check_circle, color: Colors.green)
-                            : (usernameStatus == "unavailable"
-                                ? const Icon(Icons.error, color: Colors.red)
-                                : const Icon(Icons.error,
-                                    color: Colors
-                                        .grey))), // Indicate error if applicable
-                  ),
+                  label: 'Username',
+                  icon: Icons.person,
+                  onChanged: checkUsernameAvailability,
+                  suffixIcon: _getStatusIcon(usernameStatus),
                 ),
-                const SizedBox(height: 10),
-                TextField(
-  controller: emailController,
-  onChanged: (value) {
-    if (value.isEmpty) {
-      if (emailStatus != null) {
-        setState(() {
-          emailStatus = null; // Reset icon if field is empty
-        });
-      }
-    } else if (!emailRegex.hasMatch(value)) {
-      if (emailStatus != "invalid_format") {
-        setState(() {
-          emailStatus = "invalid_format"; // Show invalid format status
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Invalid email format"),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    } else {
-      checkEmailAvailability(value); // Check availability if format is valid
-    }
-  },
-  decoration: InputDecoration(
-    prefixIcon: const Icon(Icons.email),
-    prefixIconColor: const Color.fromARGB(255, 253, 157, 2),
-    labelText: 'Email',
-    border: const OutlineInputBorder(
-      borderRadius: BorderRadius.all(Radius.circular(10)),
-    ),
-    suffixIcon: emailStatus == null
-        ? null
-        : (emailStatus == "available"
-            ? const Icon(Icons.check_circle, color: Colors.green)
-            : (emailStatus == "unavailable"
-                ? const Icon(Icons.error, color: Colors.red)
-                : (emailStatus == "invalid_format"
-                    ? const Icon(Icons.warning, color: Colors.orange)
-                    : const Icon(Icons.error, color: Colors.grey)))),
-  ),
-),
-                const SizedBox(height: 10),
-                TextField(
+
+                const SizedBox(height: 12),
+
+                // Email Field
+                _buildTextField(
+                  controller: emailController,
+                  label: 'Email',
+                  icon: Icons.email,
+                  onChanged: checkEmailAvailability,
+                  suffixIcon: _getStatusIcon(emailStatus),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Phone Number Field
+                _buildTextField(
                   controller: phoneNumberController,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: <TextInputFormatter>[
+                  label: 'Phone Number',
+                  icon: Icons.phone,
+                  inputType: TextInputType.phone,
+                  inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9()+\-\s]')),
                   ],
                   onChanged: (value) {
-                    if (value.isEmpty) {
-                      setState(() {
-                        phoneStatus = null; // Reset icon if field is empty
-                      });
-                    } else if (!phoneRegex.hasMatch(value)) {
-                      setState(() {
-                        phoneStatus =
-                            "invalid_format"; // Show invalid format status
-                      });
-                    } else {
-                      setState(() {
-                        phoneStatus = "valid"; // Valid format
-                      });
-                    }
+                    setState(() {
+                      phoneStatus = phoneRegex.hasMatch(value)
+                          ? "valid"
+                          : "invalid_format";
+                    });
                   },
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.phone),
-                    prefixIconColor: const Color.fromARGB(255, 253, 157, 2),
-                    labelText: 'Phone Number',
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                  suffixIcon: _getStatusIcon(phoneStatus),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Password Field
+                _buildPasswordField(),
+
+                const SizedBox(height: 20),
+
+                // Register Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: onRegisterDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 253, 157, 2),
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    suffixIcon: phoneStatus == null
-                        ? null
-                        : (phoneStatus == "valid"
-                            ? const Icon(Icons.check_circle,
-                                color: Colors.green)
-                            : (phoneStatus == "invalid_format"
-                                ? const Icon(Icons.warning,
-                                    color: Colors.orange)
-                                : const Icon(Icons.error, color: Colors.grey))),
+                    child: const Text(
+                      "Register",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                TextField(
-          controller: passwordController,
-          obscureText: !isPasswordVisible, // Hide/show password based on isPasswordVisible
-          keyboardType: TextInputType.visiblePassword,
-          maxLength: 6, // Limits input to 6 characters
-          onChanged: checkPasswordValidity,
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')), // Allows only alphanumeric characters
-          ],
-          decoration: InputDecoration(
-            prefix: const Icon(Icons.lock),
-            prefixIconColor: const Color.fromARGB(255, 253, 157, 2),
-            labelText: 'Password',
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-            ),
-            helperText: passwordStatus,
-            helperStyle: TextStyle(
-              color: passwordStatus == "Password is valid"
-                  ? Colors.green
-                  : Colors.red,
-            ),
-            suffixIcon: GestureDetector(
-              onLongPress: () {
-                setState(() {
-                  isPasswordVisible = true;
-                });
-              },
-              onLongPressUp: () {
-                setState(() {
-                  isPasswordVisible = false;
-                });
-              },
-              child: Icon(
-                isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-        ),
-                const SizedBox(height: 20),
-                MaterialButton(
-                    elevation: 10,
-                    onPressed: onRegisterDialog,
-                    minWidth: 400,
-                    height: 50,
-                    color: const Color.fromARGB(255, 253, 157, 2),
-                    child: const Text("Register",
-                        style: TextStyle(color: Colors.white))),
+
+                const SizedBox(height: 16),
+
+                // Google Registration Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: OutlinedButton.icon(
+                    onPressed: registerWithGoogle,
+                    icon: const Icon(Icons.login, color: Color.fromARGB(255, 253, 157, 2)),
+                    label: const Text(
+                      'Register with Google',
+                      style: TextStyle(fontSize: 16,color: Color.fromARGB(255, 253, 157, 2)),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color.fromARGB(255, 253, 157, 2)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 20),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Already registered? Login"),
+                  onTap: () => Navigator.pop(context),
+                  child: const Text(
+                    "Already registered? Login",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
                 ),
-                ElevatedButton(
-  onPressed: registerWithGoogle,
-  child: Text('Register with Google'),
-),
-
               ],
             ),
           ),
@@ -246,6 +169,85 @@ final GoogleSignIn googleSignIn = GoogleSignIn();
       ),
     );
   }
+
+  // -------------------------------
+  // Widget Builders
+  // -------------------------------
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType inputType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    required Function(String) onChanged,
+    Widget? suffixIcon,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: inputType,
+      inputFormatters: inputFormatters,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: const Color.fromARGB(255, 253, 157, 2)),
+        labelText: label,
+        border: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        suffixIcon: suffixIcon,
+      ),
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return TextField(
+      controller: passwordController,
+      obscureText: !isPasswordVisible,
+      maxLength: 6,
+      onChanged: checkPasswordValidity,
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+      ],
+      decoration: InputDecoration(
+        prefixIcon: const Icon(Icons.lock, color: Colors.orangeAccent),
+        labelText: 'Password',
+        border: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        suffixIcon: GestureDetector(
+          onTap: () {
+            setState(() {
+              isPasswordVisible = !isPasswordVisible;
+            });
+          },
+          child: Icon(
+            isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+            color: Colors.grey,
+          ),
+        ),
+        helperText: passwordStatus,
+        helperStyle: TextStyle(
+          color: passwordStatus == "Password is valid"
+              ? Colors.green
+              : Colors.red,
+        ),
+      ),
+    );
+  }
+
+  Widget _getStatusIcon(String? status) {
+    switch (status) {
+      case "available":
+        return const Icon(Icons.check_circle, color: Colors.green);
+      case "unavailable":
+        return const Icon(Icons.error, color: Colors.red);
+      case "invalid_format":
+        return const Icon(Icons.warning, color: Colors.orange);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
 
   void onRegisterDialog() {
     String email = emailController.text;

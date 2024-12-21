@@ -4,11 +4,11 @@ import 'package:simple_app/views/auth/login_page.dart';
 import 'package:simple_app/views/main_page.dart';
 import 'package:simple_app/views/newsletter/newsletter_page.dart';
 import 'package:simple_app/views/products/products_page.dart';
+import 'package:simple_app/global.dart'as globals;
 
 class MyDrawer extends StatelessWidget {
-  final String username; // Add username as a required parameter
 
-  const MyDrawer({super.key, required this.username}); // Pass username in the constructor
+  const MyDrawer({super.key}); // Pass username in the constructor
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +18,7 @@ class MyDrawer extends StatelessWidget {
           UserAccountsDrawerHeader(
             decoration: BoxDecoration(color: Colors.orangeAccent),
             accountName: Text(
-              'Welcome $username',
+              'Welcome ${globals.username!}',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -29,7 +29,7 @@ class MyDrawer extends StatelessWidget {
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
               child: Text(
-                username[0].toUpperCase(),
+                globals.username![0].toUpperCase(),
                 style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
               ),
             ),
@@ -38,7 +38,7 @@ class MyDrawer extends StatelessWidget {
             context,
             title: "Home",
             icon: Icons.home,
-            destination: MainPage(username: username),
+            destination: MainPage(),
           ),
           _buildDrawerItem(
             context,
@@ -56,13 +56,13 @@ class MyDrawer extends StatelessWidget {
             context,
             title: "Members",
             icon: Icons.group,
-            destination: const MainPage(username: "Guest"), // Placeholder for Members page
+            destination: const MainPage(), // Placeholder for Members page
           ),
           _buildDrawerItem(
             context,
             title: "Payments",
             icon: Icons.payment,
-            destination: const MainPage(username: "Guest"), // Placeholder for Payments page
+            destination: const MainPage(), // Placeholder for Payments page
           ),
           _buildDrawerItem(
             context,
@@ -74,13 +74,13 @@ class MyDrawer extends StatelessWidget {
             context,
             title: "Vetting",
             icon: Icons.check_circle,
-            destination: const MainPage(username: "Guest"), // Placeholder for Vetting page
+            destination: const MainPage(), // Placeholder for Vetting page
           ),
           _buildDrawerItem(
             context,
             title: "Settings",
             icon: Icons.settings,
-            destination: const MainPage(username: "Guest"), // Placeholder for Settings page
+            destination: const MainPage(), // Placeholder for Settings page
           ),
           ListTile(
             title: const Text("Logout"),

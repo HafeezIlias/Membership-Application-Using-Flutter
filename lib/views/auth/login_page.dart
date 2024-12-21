@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:simple_app/views/main_page.dart';
 import 'package:simple_app/views/auth/register_page.dart';
-import 'package:simple_app/views/shared/mydrawer.dart';
 import 'package:simple_app/global.dart' as globals;
 
 class LoginPage extends StatefulWidget {
@@ -22,16 +21,17 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController passwordcontroller = TextEditingController();
   TextEditingController otpController = TextEditingController();
   TextEditingController newPasswordController = TextEditingController();
+
   late bool isOtpSent = false;
   bool isPasswordVisible = false;
-  String userEmail = '';
-
   bool rememberme = false;
-  String verificationMessage = '';
+
   Color verificationColor = Colors.black;
 
   String lastSnackBarMessage = '';
   String username='';
+  String userEmail = '';
+  String verificationMessage = '';
 
   @override
   void initState() {
@@ -234,7 +234,7 @@ if (data['status'] == "success") {
         ));
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (content) => MainPage(username: username)),
+          MaterialPageRoute(builder: (content) => MainPage()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(

@@ -19,16 +19,16 @@ class NewsletterPage extends StatefulWidget {
 
 class _NewsletterPageState extends State<NewsletterPage> {
   List<News> newsList = [];
-  final df = DateFormat('dd/MM/yyyy hh:mm a');
+  final DateFormat df = DateFormat('dd/MM/yyyy hh:mm a');
   int numofpage = 1;
-  int curpage = 1;
+  int currentPage = 1;
   int numofresult = 0;
-  late double screenWidth, screenHeight;
-  var color;
+  double screenWidth = 0;
+  double screenHeight = 0;
+  String searchQuery = '';
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     loadNewsData();
   }
@@ -37,113 +37,157 @@ class _NewsletterPageState extends State<NewsletterPage> {
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
+
+    final filteredNews = searchQuery.isEmpty
+        ? newsList
+        : newsList
+            .where((news) =>
+                news.newsTitle!
+                    .toLowerCase()
+                    .contains(searchQuery.toLowerCase()) ||
+                news.newsDetails!
+                    .toLowerCase()
+                    .contains(searchQuery.toLowerCase()))
+            .toList();
+
     return Scaffold(
-        appBar: AppBar(
-          title: const Text("Newsletter"),
-          backgroundColor: Colors.orangeAccent,
-          actions: [
-            IconButton(
-                onPressed: () {
-                  loadNewsData();
-                },
-                icon: const Icon(Icons.refresh))
-          ],
+      appBar: _buildAppBar(),
+      drawer: const MyDrawer(),
+      body: newsList.isEmpty
+          ? const Center(child: Text("Loading..."))
+          : Column(
+              children: [
+                _buildPagination(),
+                _buildSearchBar(),
+                _buildNewsList(filteredNews),
+              ],
+            ),
+      floatingActionButton: _buildFloatingActionButton(),
+    );
+  }
+
+  // AppBar
+  AppBar _buildAppBar() {
+    return AppBar(
+      title: const Text("Newsletter"),
+      backgroundColor: Colors.orangeAccent,
+      actions: [
+        IconButton(
+          onPressed: loadNewsData,
+          icon: const Icon(Icons.refresh),
         ),
-        body: newsList.isEmpty
-            ? const Center(
-                child: Text("Loading..."),
-              )
-            : Column(
+      ],
+    );
+  }
+
+  // Pagination
+  Widget _buildPagination() {
+    return SizedBox(
+      height: screenHeight * 0.05,
+      child: ListView.builder(
+        shrinkWrap: true,
+        itemCount: numofpage,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          final isSelected = (currentPage - 1 == index);
+          return TextButton(
+            onPressed: () {
+              setState(() {
+                currentPage = index + 1;
+              });
+              loadNewsData();
+            },
+            child: Text(
+              (index + 1).toString(),
+              style: TextStyle(
+                color: isSelected ? Colors.red : Colors.black,
+                fontSize: 18,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+  // Search Bar
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search News',
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          prefixIcon: const Icon(Icons.search),
+        ),
+        onChanged: (value) {
+          setState(() {
+            searchQuery = value;
+          });
+        },
+      ),
+    );
+  }
+
+  // News List
+  Widget _buildNewsList(List<News> filteredNews) {
+    return Expanded(
+      child: ListView.builder(
+        itemCount: filteredNews.length,
+        itemBuilder: (context, index) {
+          return Card(
+            color: Colors.orangeAccent,
+            elevation: 7,
+            child: ListTile(
+              onLongPress: () => deleteDialog(index),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: screenHeight * 0.05,
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: numofpage,
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (context, index) {
-                        // Highlight the current page
-                        color =
-                            (curpage - 1 == index) ? Colors.red : Colors.black;
-                        return TextButton(
-                          onPressed: () {
-                            setState(() {
-                              curpage =
-                                  index + 1; // Update to the selected page
-                            });
-                            loadNewsData(); // Reload data for the selected page
-                          },
-                          child: Text(
-                            (index + 1).toString(),
-                            style: TextStyle(color: color, fontSize: 18),
-                          ),
-                        );
-                      },
+                  Text(
+                    truncateString(filteredNews[index].newsTitle ?? '', 30),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Expanded(
-                    child: ListView.builder(
-                        itemCount: newsList.length,
-                        itemBuilder: (context, index) {
-                          return Card(
-                            color: Colors.orangeAccent,
-                            elevation: 7,
-                            child: ListTile(
-                              onLongPress: () {
-                                deleteDialog(index);
-                              },
-                              title: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    truncateString(
-                                        newsList[index].newsTitle.toString(),
-                                        30),
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    df.format(DateTime.parse(
-                                        newsList[index].newsDate.toString())),
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                              subtitle: Text(
-                                truncateString(
-                                    newsList[index].newsDetails.toString(),
-                                    100),
-                                textAlign: TextAlign.justify,
-                              ),
-
-                             //leading: const Icon(Icons.article),
-                              trailing: IconButton(
-                                icon: const Icon(
-                                  Icons.arrow_forward,
-                                ),
-                                onPressed: () {
-                                  showNewsDetailsDialog(index);
-                                },
-                              ),
-                            ),
-                          );
-                        }),
+                  Text(
+                    df.format(DateTime.parse(
+                        filteredNews[index].newsDate ?? DateTime.now().toString())),
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ],
-             ),
-        drawer: const MyDrawer(username: AutofillHints.username,),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: const Color.fromARGB(255, 255, 213, 75),
-          elevation: 7,
-          onPressed: () async {
-            loadNewsData();
-            await Navigator.push(context,
-                MaterialPageRoute(builder: (content) => const NewNewsScreen()));
-            loadNewsData();
-          },
-          child: const Icon(Icons.add),
-        ));
+              ),
+              subtitle: Text(
+                truncateString(filteredNews[index].newsDetails ?? '', 100),
+                textAlign: TextAlign.justify,
+              ),
+              leading: const Icon(Icons.article),
+              trailing: IconButton(
+                icon: const Icon(Icons.arrow_forward),
+                onPressed: () => showNewsDetailsDialog(index),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Floating Action Button
+  FloatingActionButton _buildFloatingActionButton() {
+    return FloatingActionButton(
+      backgroundColor: const Color.fromARGB(255, 255, 213, 75),
+      elevation: 7,
+      onPressed: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NewNewsScreen()),
+        );
+        loadNewsData();
+      },
+      child: const Icon(Icons.add),
+    );
   }
 
   String truncateString(String str, int length) {
@@ -159,7 +203,7 @@ class _NewsletterPageState extends State<NewsletterPage> {
     int limit = 10; // Maximum number of news per page
     http
         .get(Uri.parse(
-            "${MyConfig.servername}/simple_app/api/load_news.php?pageno=$curpage&limit=$limit"))
+            "${MyConfig.servername}/simple_app/api/load_news.php?pageno=$currentPage&limit=$limit"))
         .then((response) {
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);

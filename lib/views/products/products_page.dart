@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:simple_app/global.dart' as globals;
 import '../../models/products.dart';
 import 'productdetail_page.dart';
+import 'package:custom_rating_bar/custom_rating_bar.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -50,16 +51,16 @@ class _ProductsPageState extends State<ProductsPage> {
 
     // Filtered product list based on search query
     final filteredProducts = searchQuery.isEmpty
-    ? productsList
-    : productsList
-        .where((product) =>
-            product.productTitle!
-                .toLowerCase()
-                .contains(searchQuery.toLowerCase()) ||
-            product.productType!
-                .toLowerCase()
-                .contains(searchQuery.toLowerCase()))
-        .toList();
+        ? productsList
+        : productsList
+            .where((product) =>
+                product.productTitle!
+                    .toLowerCase()
+                    .contains(searchQuery.toLowerCase()) ||
+                product.productType!
+                    .toLowerCase()
+                    .contains(searchQuery.toLowerCase()))
+            .toList();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Product Page'),
@@ -126,28 +127,29 @@ class _ProductsPageState extends State<ProductsPage> {
           : Column(
               children: [
                 SizedBox(
-  height: PageproductsPageHeight * 0.05,
-  child: ListView.builder(
-    shrinkWrap: true,
-    itemCount: numofpage,
-    scrollDirection: Axis.horizontal,
-    itemBuilder: (context, index) {
-      color = (curpage == index + 1) ? Colors.red : Colors.black;
-      return TextButton(
-        onPressed: () {
-          setState(() {
-            curpage = index + 1;
-          });
-          loadProductsData(); // Reload data for the selected page
-        },
-        child: Text(
-          (index + 1).toString(),
-          style: TextStyle(color: color, fontSize: 18),
-        ),
-      );
-    },
-  ),
-),
+                  height: PageproductsPageHeight * 0.05,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: numofpage,
+                    scrollDirection: Axis.horizontal,
+                    itemBuilder: (context, index) {
+                      color =
+                          (curpage == index + 1) ? Colors.red : Colors.black;
+                      return TextButton(
+                        onPressed: () {
+                          setState(() {
+                            curpage = index + 1;
+                          });
+                          loadProductsData(); // Reload data for the selected page
+                        },
+                        child: Text(
+                          (index + 1).toString(),
+                          style: TextStyle(color: color, fontSize: 18),
+                        ),
+                      );
+                    },
+                  ),
+                ),
                 // Search bar
                 Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -281,17 +283,50 @@ class _ProductsPageState extends State<ProductsPage> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                //Product Rating
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8.0,vertical: 4.0),
+                                  child: RatingBar.readOnly(
+                                    initialRating: filteredProducts[index]
+                                            .productRating
+                                            ?.toDouble() ??
+                                        0.0,
+                                    isHalfAllowed: true,
+                                    alignment: Alignment.centerLeft,
+                                    filledIcon: Icons.star,
+                                    emptyIcon: Icons.star_border,
+                                    emptyColor: const Color.fromARGB(
+                                        255, 113, 113, 113),
+                                    filledColor:
+                                        const Color.fromARGB(255, 238, 250, 0),
+                                    halfFilledColor: const Color.fromARGB(255, 238, 250, 0),
+                                    halfFilledIcon: Icons.star_half,
+                                    maxRating: 5,
+                                    size: 18,
+                                  ),
+                                ),
                                 // Product Price
                                 Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    "RM${(filteredProducts[index].productPrice?.toDouble() ?? 0.0).toStringAsFixed(2)}",
+                                  padding: const EdgeInsets.symmetric(vertical: 0,horizontal: 8),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        "RM${(filteredProducts[index].productPrice?.toDouble() ?? 0.0).toStringAsFixed(2)}",
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w900,
+                                          color: Color.fromARGB(255, 253, 157, 2),
+                                        ),
+                                      ),Text(
+                                    "${(filteredProducts[index].productSold?.toInt() ?? 0)} Sold",
                                     style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color.fromARGB(
-                                          255, 253, 157, 2),
+                                      fontSize: 10,
+                                      color: Color.fromARGB(255, 0, 0, 0),
                                     ),
+                                  ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -304,7 +339,7 @@ class _ProductsPageState extends State<ProductsPage> {
                 ),
               ],
             ),
-      drawer: const MyDrawer(username: AutofillHints.username),
+      drawer: const MyDrawer(),
       floatingActionButton: FloatingActionButton(
         foregroundColor: Colors.white,
         backgroundColor: const Color.fromARGB(255, 253, 157, 2),
@@ -333,42 +368,42 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   Future<void> loadProductsData() async {
-  try {
-    final response = await http.get(Uri.parse(
-        "${MyConfig.servername}/simple_app/api/load_products.php?pageno=$curpage&limit=$itemsPerPage"));
-    log(response.body.toString()); // Debug response
+    try {
+      final response = await http.get(Uri.parse(
+          "${MyConfig.servername}/simple_app/api/load_products.php?pageno=$curpage&limit=$itemsPerPage"));
+      log(response.body.toString()); // Debug response
 
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      if (data['status'] == "success") {
-        var result = data['data'];
-        if (result != null && result is List) {
-          productsList.clear();
-          for (var item in result) {
-            Myproduct myproduct = Myproduct.fromJson(item);
-            productsList.add(myproduct);
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        if (data['status'] == "success") {
+          var result = data['data'];
+          if (result != null && result is List) {
+            productsList.clear();
+            for (var item in result) {
+              Myproduct myproduct = Myproduct.fromJson(item);
+              productsList.add(myproduct);
+            }
+
+            numofpage = int.tryParse(data['numofpage'].toString()) ?? 1;
+            numofresult = int.tryParse(data['numberofresult'].toString()) ?? 0;
+
+            setState(() {});
+          } else {
+            status = "No products found";
           }
-
-          numofpage = int.tryParse(data['numofpage'].toString()) ?? 1;
-          numofresult = int.tryParse(data['numberofresult'].toString()) ?? 0;
-
-          setState(() {});
         } else {
-          status = "No products found";
+          status = "No Data";
         }
       } else {
-        status = "No Data";
+        status = "Error loading data";
+        print("Error: ${response.statusCode}");
       }
-    } else {
-      status = "Error loading data";
-      print("Error: ${response.statusCode}");
+    } catch (error) {
+      log("Error: $error");
+      status = "An error occurred while loading data";
     }
-  } catch (error) {
-    log("Error: $error");
-    status = "An error occurred while loading data";
+    setState(() {});
   }
-  setState(() {});
-}
 
   void showProductDetails(int index) {
     // Get the selected product from the list

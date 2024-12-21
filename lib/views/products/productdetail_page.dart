@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:simple_app/models/products.dart';
@@ -11,7 +12,8 @@ class ProductDetailPage extends StatefulWidget {
   final Myproduct product;
   final String userId; // Pass user ID from the parent widget
 
-  const ProductDetailPage({super.key, required this.product, required this.userId});
+  const ProductDetailPage(
+      {super.key, required this.product, required this.userId});
 
   @override
   State<ProductDetailPage> createState() => _ProductDetailPageState();
@@ -78,12 +80,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             const SizedBox(height: 16),
 
             // Product Title
-            Text(
-              currentProduct.productTitle.toString(),
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  currentProduct.productTitle.toString(),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  
+                  "${(currentProduct.productSold?.toInt() ?? 0)} Sold",
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Color.fromARGB(255, 0, 0, 0),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
@@ -109,8 +124,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     : Colors.red,
               ),
             ),
-            const SizedBox(height: 16),
-
+            const SizedBox(height: 8),
             // Product Description
             const Text('Description:', style: TextStyle(fontSize: 18)),
             Text(
@@ -118,8 +132,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               textAlign: TextAlign.justify,
               style: const TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 24),
-
+            const SizedBox(height: 8),
+            //Product Rating
+            RatingBar.readOnly(
+              initialRating: currentProduct.productRating?.toDouble() ?? 0.0,
+              isHalfAllowed: true,
+              alignment: Alignment.centerLeft,
+              filledIcon: Icons.star,
+              emptyIcon: Icons.star_border,
+              emptyColor: const Color.fromARGB(255, 113, 113, 113),
+              filledColor: const Color.fromARGB(255, 238, 250, 0),
+              halfFilledColor: const Color.fromARGB(255, 238, 250, 0),
+              halfFilledIcon: Icons.star_half,
+              maxRating: 5,
+              size: 25,
+            ),
             // Product Date Added
             Text(
               "Added on: ${DateFormat('dd/MM/yyyy hh:mm a').format(DateTime.parse(currentProduct.productDate.toString()))}",
@@ -178,7 +205,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ElevatedButton.icon(
               onPressed: (currentProduct.productStock ?? 0) > 0
                   ? () {
-                      addToCart(widget.userId, currentProduct.productId!, quantityToBuy);
+                      addToCart(widget.userId, currentProduct.productId!,
+                          quantityToBuy);
                     }
                   : null,
               icon: const Icon(
@@ -203,39 +231,46 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Future<void> addToCart(String userId, String productId, int quantity) async {
-  try {
-    final response = await http.post(
-      Uri.parse('${MyConfig.servername}/simple_app/api/addtocart.php'),
-      body: {
-        'user_id': userId,
-        'product_id': productId,
-        'quantity': quantity.toString()
-      },
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('${MyConfig.servername}/simple_app/api/addtocart.php'),
+        body: {
+          'user_id': userId,
+          'product_id': productId,
+          'quantity': quantity.toString()
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
-      if (responseData['status'] == 'success') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product added to cart successfully!')),
-        );
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        if (responseData['status'] == 'success') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Product added to cart successfully!')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content:
+                    Text('Failed to add product: ${responseData['message']}')),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add product: ${responseData['message']}')),
+          const SnackBar(
+              content: Text('Server error. Please try again later.')),
         );
       }
-    } else {
+    } catch (error) {
+      print('User ID: ' + userId.toString());
+      print('Product ID: ' +
+          productId.toString() +
+          ' Quantity: ' +
+          quantity.toString());
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Server error. Please try again later.')),
+        const SnackBar(content: Text('An error occurred. Please try again.')),
       );
     }
-  } catch (error) {
-    print('User ID: ' + userId.toString());
-    print('Product ID: ' + productId.toString() + ' Quantity: ' + quantity.toString());
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('An error occurred. Please try again.')),
-    );
   }
-}
 }
