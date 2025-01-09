@@ -1,12 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.simple_app">
 
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <!-- Required for handling file URIs on Android 10 and above -->
     <application
         android:label="simple_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:requestLegacyExternalStorage="true">
+        android:requestLegacyExternalStorage="true"
+        android:enableOnBackInvokedCallback="true">
+        
+
+        <meta-data android:name="com.google.android.geo.API_KEY"
+               android:value="AIzaSyCEcjTOfBRlF8mcestpiNN5IHYDGQahhtg"/>
         
         <!-- Main Activity -->
         <activity
@@ -22,8 +30,8 @@
             <!-- Specifies the Android theme for this activity -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
-                android:resource="@style/NormalTheme" />
-
+                android:resource="@style/NormalTheme"/>
+                
             <!-- Intent filter to define the launcher activity -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
