@@ -11,9 +11,11 @@ import 'package:simple_app/views/events/edit_event.dart';
 import 'package:simple_app/views/events/new_event.dart';
 import 'package:simple_app/views/shared/mydrawer.dart';
 import 'package:http/http.dart' as http;
+import 'package:simple_app/models/user.dart';
 
 class EventsPage extends StatefulWidget {
-  const EventsPage({super.key});
+  final User user;
+  const EventsPage({super.key,required this.user});
 
   @override
   State<EventsPage> createState() => _EventsPageState();
@@ -113,11 +115,11 @@ class _EventsPageState extends State<EventsPage> {
                   ),
                 );
               })),
-      drawer: const MyDrawer(),
+      drawer: MyDrawer(user: widget.user),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(context,
-              MaterialPageRoute(builder: (content) => const NewEventsPage()));
+              MaterialPageRoute(builder: (content) => NewEventsPage(user: widget.user,)));
         },
         child: const Icon(Icons.add),
       ),

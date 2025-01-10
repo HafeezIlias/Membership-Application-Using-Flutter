@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -5,11 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:simple_app/models/user.dart';
 import 'package:simple_app/myconfig.dart';
 import 'package:simple_app/views/events/events_page.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class NewEventsPage extends StatefulWidget {
-  const NewEventsPage({super.key});
+  final User user;
+  const NewEventsPage({super.key, required this.user});
 
   @override
   State<NewEventsPage> createState() => _NewEventsPageState();
@@ -27,7 +33,7 @@ class _NewEventsPageState extends State<NewEventsPage> {
     {'label': 'Seminar', 'icon': Icons.school},
     {'label': 'Hackathon', 'icon': Icons.computer},
   ];
-  late double PageNewEventsPageWidth, PageNewEventsPageHeight;
+  late double pageWidth, pageHeight;
 
   File? _image;
 
@@ -38,8 +44,8 @@ class _NewEventsPageState extends State<NewEventsPage> {
 
   @override
   Widget build(BuildContext context) {
-    PageNewEventsPageHeight = MediaQuery.of(context).size.height;
-    PageNewEventsPageWidth = MediaQuery.of(context).size.width;
+    pageHeight = MediaQuery.of(context).size.height;
+    pageWidth = MediaQuery.of(context).size.width;
     return Scaffold(
         appBar: AppBar(
           title: const Text("New Event"),
@@ -62,7 +68,8 @@ class _NewEventsPageState extends State<NewEventsPage> {
                               fit: BoxFit.contain,
                               image: _image == null
                                   ? const AssetImage(
-                                      'assets/Camera.png',) // Correct usage of AssetImage
+                                      'assets/Camera.png',
+                                    ) // Correct usage of AssetImage
                                   : FileImage(_image!)
                                       as ImageProvider, // Correct usage of FileImage
                             ),
@@ -70,7 +77,7 @@ class _NewEventsPageState extends State<NewEventsPage> {
                             color: Colors.grey.shade200,
                             border: Border.all(color: Colors.grey),
                           ),
-                          height: PageNewEventsPageHeight * 0.4),
+                          height: pageHeight * 0.4),
                     ),
                     const SizedBox(
                       height: 10,
@@ -172,49 +179,55 @@ class _NewEventsPageState extends State<NewEventsPage> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    TextFormField(                     
+                    TextFormField(
                         validator: (value) =>
                             value!.isEmpty ? "Enter Location" : null,
                         controller: locationController,
-                        decoration:  InputDecoration(
-                          suffixIcon: IconButton(onPressed: (){}, icon: Icon(Icons.location_on)),
+                        decoration: InputDecoration(
+                            suffixIcon: IconButton(
+                                onPressed: () {
+                                  getPositionDialog();
+                                },
+                                icon: Icon(Icons.location_on)),
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(10)),
                             ),
-                           labelText: "Event Location")),
+                            labelText: "Event Location")),
                     const SizedBox(height: 10),
                     DropdownButtonFormField(
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-          ),
-          labelText: 'Event Type',
-        ),
-        value: selectedValue,
-        icon: const Icon(Icons.keyboard_arrow_down),
-        items: items.map((item) {
-          return DropdownMenuItem(
-            value: item['label'], // Use the label as the value
-            child: Row(
-              children: [
-                Icon(
-                  item['icon'], // Icon from the list
-                  color:const Color.fromARGB(255, 253, 157, 2),
-                ),
-                const SizedBox(width: 8), // Space between the icon and text
-                Text(item['label']), // Display the label
-              ],
-            ),
-          );
-        }).toList(),
-        onChanged: (newValue) {
-          setState(() {
-            selectedValue = newValue as String?; // Update the selected value
-          });
-          print('Selected: $selectedValue');
-        },
-      ),
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                        ),
+                        labelText: 'Event Type',
+                      ),
+                      value: selectedValue,
+                      icon: const Icon(Icons.keyboard_arrow_down),
+                      items: items.map((item) {
+                        return DropdownMenuItem(
+                          value: item['label'], // Use the label as the value
+                          child: Row(
+                            children: [
+                              Icon(
+                                item['icon'], // Icon from the list
+                                color: const Color.fromARGB(255, 253, 157, 2),
+                              ),
+                              const SizedBox(
+                                  width: 8), // Space between the icon and text
+                              Text(item['label']), // Display the label
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          selectedValue =
+                              newValue as String?; // Update the selected value
+                        });
+                        print('Selected: $selectedValue');
+                      },
+                    ),
                     const SizedBox(height: 10),
                     TextFormField(
                         validator: (value) =>
@@ -266,12 +279,12 @@ class _NewEventsPageState extends State<NewEventsPage> {
 
                         insertEventDialog();
                       },
-                      minWidth: PageNewEventsPageWidth,
+                      minWidth: pageWidth,
                       height: 50,
-                      color:  const Color.fromARGB(255, 253, 157, 2), 
+                      color: const Color.fromARGB(255, 253, 157, 2),
                       child: Text(
                         "Insert",
-                        style:TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
@@ -295,8 +308,8 @@ class _NewEventsPageState extends State<NewEventsPage> {
               children: [
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                      fixedSize: Size(PageNewEventsPageWidth / 4,
-                          PageNewEventsPageHeight / 8)),
+                      fixedSize: Size(pageWidth / 4,
+                          pageHeight / 8)),
                   child: const Text('Gallery'),
                   onPressed: () => {
                     Navigator.of(context).pop(),
@@ -308,8 +321,8 @@ class _NewEventsPageState extends State<NewEventsPage> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                      fixedSize: Size(PageNewEventsPageWidth / 4,
-                          PageNewEventsPageHeight / 8)),
+                      fixedSize: Size(pageWidth / 4,
+                          pageHeight / 8)),
                   child: const Text('Camera'),
                   onPressed: () => {
                     Navigator.of(context).pop(),
@@ -332,7 +345,7 @@ class _NewEventsPageState extends State<NewEventsPage> {
     // print("BEFORE CROP: ");
     // print(getFileSize(_image!));
     if (pickedFile != null) {
-       _image = File(pickedFile.path);
+      _image = File(pickedFile.path);
       setState(() {
         _image = File(pickedFile.path);
       });
@@ -359,40 +372,40 @@ class _NewEventsPageState extends State<NewEventsPage> {
   }
 
   Future<void> cropImage() async {
-  if (_image == null) {
-    print("No image to crop.");
-    return; // Exit if no image is set
+    if (_image == null) {
+      print("No image to crop.");
+      return; // Exit if no image is set
+    }
+
+    CroppedFile? croppedFile = await ImageCropper().cropImage(
+      sourcePath: _image!.path,
+      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Please Crop Your Image',
+          toolbarColor: Colors.deepOrange,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false,
+        ),
+        IOSUiSettings(
+          title: 'Cropper',
+        ),
+      ],
+    );
+
+    if (croppedFile != null) {
+      // If cropping is successful
+      File imageFile = File(croppedFile.path);
+      setState(() {
+        _image = imageFile; // Update the _image with the cropped image
+      });
+
+      //print("Cropped Image Size: ${await getFileSize(_image!)}"); // Print image size after cropping
+    } else {
+      print("Image cropping failed.");
+    }
   }
-
-  CroppedFile? croppedFile = await ImageCropper().cropImage(
-    sourcePath: _image!.path,
-    aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-    uiSettings: [
-      AndroidUiSettings(
-        toolbarTitle: 'Please Crop Your Image',
-        toolbarColor: Colors.deepOrange,
-        toolbarWidgetColor: Colors.white,
-        initAspectRatio: CropAspectRatioPreset.original,
-        lockAspectRatio: false,
-      ),
-      IOSUiSettings(
-        title: 'Cropper',
-      ),
-    ],
-  );
-
-  if (croppedFile != null) {
-    // If cropping is successful
-    File imageFile = File(croppedFile.path);
-    setState(() {
-      _image = imageFile; // Update the _image with the cropped image
-    });
-
-    //print("Cropped Image Size: ${await getFileSize(_image!)}"); // Print image size after cropping
-  } else {
-    print("Image cropping failed.");
-  }
-}
 
   double getFileSize(File file) {
     int sizeInBytes = file.lengthSync();
@@ -421,9 +434,9 @@ class _NewEventsPageState extends State<NewEventsPage> {
                   insertEvent();
                   Navigator.of(context).pop();
                   Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const EventsPage()),
-        );
+                    context,
+                    MaterialPageRoute(builder: (context) => EventsPage(user: widget.user)),
+                  );
                 },
               ),
               TextButton(
@@ -476,17 +489,143 @@ class _NewEventsPageState extends State<NewEventsPage> {
     });
   }
 
-  void getPositionDialog(){
-    showDialog(context: context, builder: (BuildContext context){
-      return AlertDialog(
-       title: const Text('Get Location From :',style: TextStyle(),),
-       content: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
+  Future<void> determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
 
-        ],
-       ), 
-      );
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    Position position = await Geolocator.getCurrentPosition();
+    List<Placemark> placemarks =
+        await placemarkFromCoordinates(position.latitude, position.longitude);
+    if (placemarks.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Location not found"),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+    String address = "${placemarks[0].name}, ${placemarks[0].country}";
+    print(address);
+    locationController.text = address;
+    setState(() {
+      print(position.latitude);
+      print(position.longitude);
     });
+  }
+
+  void getPositionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: const Text(
+            "Get Location From:",
+            style: TextStyle(),
+          ),
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    determinePosition();
+                  },
+                  icon: const Icon(
+                    Icons.location_on,
+                    size: 60,
+                  )),
+              IconButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _selectfromMap();
+                  },
+                  icon: const Icon(
+                    Icons.map,
+                    size: 60,
+                  )),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _selectfromMap() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    Position position = await Geolocator.getCurrentPosition();
+    if (position == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Location not found"),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
+    final Completer<GoogleMapController> mapcontroller =
+        Completer<GoogleMapController>();
+
+    CameraPosition defaultLocation = CameraPosition(
+      target: LatLng(
+        position.latitude,
+        position.longitude,
+      ),
+      zoom: 14.4746,
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+            title: const Text("Select Location"),
+            content: SizedBox(
+                height: pageHeight,
+                width: pageWidth,
+                child: GoogleMap(
+                  mapType: MapType.normal,
+                  initialCameraPosition: defaultLocation,
+                  onMapCreated: (controller) =>
+                      mapcontroller.complete(controller),
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: true,
+                  compassEnabled: true,
+                )));
+      },
+    );
   }
 }
