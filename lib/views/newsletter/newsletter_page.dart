@@ -9,9 +9,11 @@ import 'package:simple_app/myconfig.dart';
 import 'package:simple_app/views/newsletter/edits_news.dart';
 import 'package:simple_app/views/newsletter/new_news.dart';
 import 'package:simple_app/views/shared/mydrawer.dart';
+import 'package:simple_app/models/user.dart';
 
 class NewsletterPage extends StatefulWidget {
-  const NewsletterPage({super.key});
+  final User user;
+  const NewsletterPage({super.key, required this.user});
 
   @override
   State<NewsletterPage> createState() => _NewsletterPageState();
@@ -52,7 +54,7 @@ class _NewsletterPageState extends State<NewsletterPage> {
 
     return Scaffold(
       appBar: _buildAppBar(),
-      drawer: const MyDrawer(),
+      drawer:  MyDrawer(user: widget.user,),
       body: newsList.isEmpty
           ? const Center(child: Text("Loading..."))
           : Column(
@@ -137,7 +139,7 @@ class _NewsletterPageState extends State<NewsletterPage> {
         itemCount: filteredNews.length,
         itemBuilder: (context, index) {
           return Card(
-            color: Colors.orangeAccent,
+            color: Colors.white,
             elevation: 7,
             child: ListTile(
               onLongPress: () => deleteDialog(index),

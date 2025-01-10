@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:simple_app/models/user.dart';
 import 'package:simple_app/views/products/cart_page.dart';
 import 'package:simple_app/myconfig.dart';
 import 'package:simple_app/views/products/new_product.dart';
@@ -13,7 +14,8 @@ import 'productdetail_page.dart';
 import 'package:custom_rating_bar/custom_rating_bar.dart';
 
 class ProductsPage extends StatefulWidget {
-  const ProductsPage({super.key});
+  final User user;
+  const ProductsPage({super.key, required this.user});
 
   @override
   State<ProductsPage> createState() => _ProductsPageState();
@@ -286,7 +288,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                 //Product Rating
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 8.0,vertical: 4.0),
+                                      horizontal: 8.0, vertical: 4.0),
                                   child: RatingBar.readOnly(
                                     initialRating: filteredProducts[index]
                                             .productRating
@@ -300,7 +302,8 @@ class _ProductsPageState extends State<ProductsPage> {
                                         255, 113, 113, 113),
                                     filledColor:
                                         const Color.fromARGB(255, 238, 250, 0),
-                                    halfFilledColor: const Color.fromARGB(255, 238, 250, 0),
+                                    halfFilledColor:
+                                        const Color.fromARGB(255, 238, 250, 0),
                                     halfFilledIcon: Icons.star_half,
                                     maxRating: 5,
                                     size: 18,
@@ -308,24 +311,28 @@ class _ProductsPageState extends State<ProductsPage> {
                                 ),
                                 // Product Price
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 0,horizontal: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 0, horizontal: 8),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         "RM${(filteredProducts[index].productPrice?.toDouble() ?? 0.0).toStringAsFixed(2)}",
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w900,
-                                          color: Color.fromARGB(255, 253, 157, 2),
+                                          color:
+                                              Color.fromARGB(255, 253, 157, 2),
                                         ),
-                                      ),Text(
-                                    "${(filteredProducts[index].productSold?.toInt() ?? 0)} Sold",
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Color.fromARGB(255, 0, 0, 0),
-                                    ),
-                                  ),
+                                      ),
+                                      Text(
+                                        "${(filteredProducts[index].productSold?.toInt() ?? 0)} Sold",
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Color.fromARGB(255, 0, 0, 0),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -339,7 +346,7 @@ class _ProductsPageState extends State<ProductsPage> {
                 ),
               ],
             ),
-      drawer: const MyDrawer(),
+      drawer: MyDrawer(user: widget.user),
       floatingActionButton: FloatingActionButton(
         foregroundColor: Colors.white,
         backgroundColor: const Color.fromARGB(255, 253, 157, 2),
@@ -415,7 +422,6 @@ class _ProductsPageState extends State<ProductsPage> {
       MaterialPageRoute(
         builder: (context) => ProductDetailPage(
           product: selectedProduct,
-          userId: userId!,
         ),
       ),
     );
@@ -430,7 +436,9 @@ class _ProductsPageState extends State<ProductsPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CartPage(userId: userId!),
+        builder: (context) => CartPage(
+          user: widget.user,
+        ),
       ),
     );
   }

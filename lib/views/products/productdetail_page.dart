@@ -4,16 +4,17 @@ import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:simple_app/models/products.dart';
+import 'package:simple_app/models/user.dart';
 import 'package:simple_app/myconfig.dart';
 import 'package:http/http.dart' as http;
 import 'package:simple_app/views/products/edit_product.dart';
+import 'package:simple_app/global.dart' as globals;
 
 class ProductDetailPage extends StatefulWidget {
   final Myproduct product;
-  final String userId; // Pass user ID from the parent widget
+  
 
-  const ProductDetailPage(
-      {super.key, required this.product, required this.userId});
+  const ProductDetailPage({super.key, required this.product});
 
   @override
   State<ProductDetailPage> createState() => _ProductDetailPageState();
@@ -31,6 +32,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    User user = User();
     final double pageWidth = MediaQuery.of(context).size.width;
     final double pageHeight = MediaQuery.of(context).size.height;
 
@@ -205,7 +207,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ElevatedButton.icon(
               onPressed: (currentProduct.productStock ?? 0) > 0
                   ? () {
-                      addToCart(widget.userId, currentProduct.productId!,
+                      addToCart(globals.userId!,currentProduct.productId!,
                           quantityToBuy);
                     }
                   : null,
@@ -262,7 +264,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         );
       }
     } catch (error) {
-      print('User ID: ' + userId.toString());
+      print('User ID: ' + userId);
       print('Product ID: ' +
           productId.toString() +
           ' Quantity: ' +
