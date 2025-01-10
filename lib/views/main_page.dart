@@ -8,13 +8,17 @@ import 'package:simple_app/views/newsletter/newsletter_page.dart';
 import 'package:simple_app/views/payments/payments_page.dart';
 import 'package:simple_app/views/products/products_page.dart';
 import 'package:simple_app/views/shared/mydrawer.dart';
-import 'package:simple_app/views/vetting/vetting_page.dart';
+// import 'package:simple_app/views/vetting/vetting_page.dart';
+import 'package:simple_app/views/membership/membership_page.dart';
 import 'package:simple_app/models/news.dart';
-import 'package:simple_app/global.dart' as globals;
 import 'package:http/http.dart' as http;
 
+import '../models/user.dart';
+
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  final User user;
+
+  const MainPage({super.key, required this.user});
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -37,7 +41,7 @@ class _MainPageState extends State<MainPage> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         key: scaffoldKey,
-        drawer: MyDrawer(),
+        drawer: MyDrawer(user: widget.user,),
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,18 +63,30 @@ class _MainPageState extends State<MainPage> {
   }
 
   // --- Profile Section ---
+
   Widget _buildProfileSection() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: const BoxDecoration(color: Colors.orangeAccent),
       child: Row(
         children: [
+          // IconButton(onPressed: (){
+          //   MyDrawer();
+          // }, icon: Icon(Icons.menu , color: Colors.white,),),
           ClipOval(
-            child: Image.asset(
-              'assets/Logo Simple App.png',
+            child: Image.network(
+              "${MyConfig.servername}/simple_app/assets/profileImage/${widget.user.userprofileimage}",
               width: 50,
               height: 50,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Image.asset(
+                  'assets/user.png',
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                );
+              },
             ),
           ),
           const SizedBox(width: 16),
@@ -79,15 +95,15 @@ class _MainPageState extends State<MainPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  globals.username ?? "User",
+                  widget.user.username?? "User",
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Text(
-                  'Admin',
+                 Text(
+                  widget.user.userrole?? "Role Undefined",
                   style: TextStyle(color: Colors.white70),
                 ),
               ],
@@ -213,15 +229,15 @@ Widget _buildNewsSection() {
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const NewsletterPage()));
+                    builder: (context) => NewsletterPage(user: widget.user,)));
           }),
           buildQuickAccessButton('Events', Icons.event, () {
             Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const EventsPage()));
+                MaterialPageRoute(builder: (context) => EventsPage(user: widget.user,)));
           }),
           buildQuickAccessButton('Members', Icons.group, () {
             Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const MembersPage()));
+                MaterialPageRoute(builder: (context) => MembersPage(user: widget.user,)));
           }),
           buildQuickAccessButton('Payments', Icons.payment, () {
             Navigator.push(context,
@@ -229,11 +245,11 @@ Widget _buildNewsSection() {
           }),
           buildQuickAccessButton('Products', Icons.shopping_bag, () {
             Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const ProductsPage()));
+                MaterialPageRoute(builder: (context) => ProductsPage(user: widget.user,)));
           }),
-          buildQuickAccessButton('Vetting', Icons.verified, () {
+          buildQuickAccessButton('Membership', Icons.badge, () {
             Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const VettingPage()));
+                MaterialPageRoute(builder: (context) => MembershipPage(user: widget.user,)));
           }),
         ],
       ),
@@ -259,7 +275,7 @@ Widget _buildNewsSection() {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => NewsletterPage()),                 
+                  MaterialPageRoute(builder: (context) => NewsletterPage(user: widget.user)),                 
                 );
               },
               child: const Text("Learn More"),
