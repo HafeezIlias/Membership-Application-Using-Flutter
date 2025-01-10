@@ -39,6 +39,9 @@ class Myproduct {
     productRating = json['product_rating'] != null
         ? double.tryParse(json['product_rating'].toString())
         : null;
+    productSold = json['product_sold'] != null
+        ? int.tryParse(json['product_sold'].toString())
+        : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -51,6 +54,8 @@ class Myproduct {
     data['product_date'] = productDate;
     data['product_price'] = productPrice?.toString(); // Convert to string for JSON
     data['product_stock'] = productStock?.toString(); // Convert to string for JSON
+    data['product_rating'] = productRating?.toString(); // Convert to string for JSON
+    data['product_sold'] = productSold?.toString(); // Convert to string for JSON
     return data;
   }
 }

@@ -8,6 +8,7 @@ class User {
   String? useraddress;
   String? userprofileimage;
   String? userranking;
+  String? userrole;
 
   User(
       {this.userid,
@@ -18,7 +19,8 @@ class User {
       this.userdatereg,
       this.useraddress,
       this.userprofileimage,
-      this.userranking});
+      this.userranking,
+      this.userrole});
 
   User.fromJson(Map<String, dynamic> json) {
     userid = json['userid'];
@@ -30,6 +32,7 @@ class User {
     useraddress = json['useraddress'];
     userprofileimage = json['userprofileimage'];
     userranking = json['userranking'];
+    userrole = json['userrole'];
   }
 
   Map<String, dynamic> toJson() {
@@ -43,6 +46,7 @@ class User {
     data['useraddress'] = useraddress;
     data['userprofileimage'] = userprofileimage;
     data['userranking'] = userranking;
+    data['userrole'] = userrole;
     return data;
   }
 }
