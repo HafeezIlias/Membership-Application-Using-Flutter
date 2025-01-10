@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:email_otp/email_otp.dart';
+import 'package:simple_app/models/user.dart';
 import 'package:simple_app/myconfig.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:simple_app/views/main_page.dart';
 import 'package:simple_app/views/auth/register_page.dart';
-import 'package:simple_app/global.dart' as globals;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -220,21 +220,18 @@ class _LoginPageState extends State<LoginPage> {
       var data = jsonDecode(response.body);
 if (data['status'] == "success") {
         // Safely extract user data with null-checks
-        globals.userId = data['data']['user_id'] ?? 'No user ID'; 
-        globals.username = data['data']['username'] ?? 'Guest'; // Fallback if 'user_id' is not present
-        String? usernameFromApi = data['data']['username'];
-        String username = usernameFromApi ?? 'Guest';  // Fallback to 'Guest' if username is null
+        User user = User.fromJson(data['data']);
         
         // Print user data
-        print('User ID: ${globals.userId}');
-        print('Username: $username');
+        print('User ID: ${user.userid}');
+        print('User Name: ${user.username}');
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("Login Success"),
           backgroundColor: Colors.green,
         ));
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (content) => MainPage()),
+          MaterialPageRoute(builder: (content) => MainPage( user: user,)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
