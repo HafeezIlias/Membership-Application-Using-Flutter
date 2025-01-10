@@ -8,7 +8,6 @@ import 'package:simple_app/myconfig.dart';
 import 'package:simple_app/views/products/new_product.dart';
 import 'package:simple_app/views/shared/mydrawer.dart';
 import 'package:http/http.dart' as http;
-import 'package:simple_app/global.dart' as globals;
 import '../../models/products.dart';
 import 'productdetail_page.dart';
 import 'package:custom_rating_bar/custom_rating_bar.dart';
@@ -26,7 +25,6 @@ class _ProductsPageState extends State<ProductsPage> {
   late double PageproductsPageWidth, PageproductsPageHeight;
   final df = DateFormat('dd/MM/yyyy hh:mm a');
   String status = "No Product Found";
-  String? userId = globals.userId; // Fetching userId from globals
   final List<Map<String, dynamic>> cart = [];
   int cartItemCount = 0; // To hold the cart count
 
@@ -104,7 +102,7 @@ class _ProductsPageState extends State<ProductsPage> {
               ],
             ),
             onPressed: () {
-              if (userId != null) {
+              if (widget.user.userid != null) {
                 // Ensure userId is not null before navigating
                 navigateToCartPage();
               } else {
@@ -422,6 +420,7 @@ class _ProductsPageState extends State<ProductsPage> {
       MaterialPageRoute(
         builder: (context) => ProductDetailPage(
           product: selectedProduct,
+          user: widget.user,
         ),
       ),
     );
@@ -447,7 +446,7 @@ class _ProductsPageState extends State<ProductsPage> {
   Future<int> loadCartCount() async {
     final response = await http.post(
       Uri.parse("${MyConfig.servername}/simple_app/api/load_cart2.php"),
-      body: {'user_id': userId},
+      body: {'user_id': widget.user.userid},
     );
 
     if (response.statusCode == 200) {

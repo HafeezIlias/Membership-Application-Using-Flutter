@@ -8,13 +8,12 @@ import 'package:simple_app/models/user.dart';
 import 'package:simple_app/myconfig.dart';
 import 'package:http/http.dart' as http;
 import 'package:simple_app/views/products/edit_product.dart';
-import 'package:simple_app/global.dart' as globals;
+
 
 class ProductDetailPage extends StatefulWidget {
   final Myproduct product;
-  
-
-  const ProductDetailPage({super.key, required this.product});
+  final User user;
+  const ProductDetailPage({super.key, required this.product, required this.user});
 
   @override
   State<ProductDetailPage> createState() => _ProductDetailPageState();
@@ -207,7 +206,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ElevatedButton.icon(
               onPressed: (currentProduct.productStock ?? 0) > 0
                   ? () {
-                      addToCart(globals.userId!,currentProduct.productId!,
+                      addToCart(widget.user.userid!,currentProduct.productId!,
                           quantityToBuy);
                     }
                   : null,
