@@ -14,7 +14,7 @@
         
 
         <meta-data android:name="com.google.android.geo.API_KEY"
-               android:value="AIzaSyCEcjTOfBRlF8mcestpiNN5IHYDGQahhtg"/>
+               android:value="your api key"/>
         
         <!-- Main Activity -->
         <activity
