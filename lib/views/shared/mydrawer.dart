@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:simple_app/models/user.dart';
+import 'package:simple_app/myconfig.dart';
 import 'package:simple_app/views/events/events_page.dart';
 import 'package:simple_app/views/auth/login_page.dart';
 import 'package:simple_app/views/main_page.dart';
+import 'package:simple_app/views/members/members_page.dart';
+import 'package:simple_app/views/membership/membership_page.dart';
 import 'package:simple_app/views/newsletter/newsletter_page.dart';
 import 'package:simple_app/views/products/products_page.dart';
-import 'package:simple_app/global.dart'as globals;
 
 class MyDrawer extends StatelessWidget {
 
-  const MyDrawer({super.key}); // Pass username in the constructor
+  final User user;
+  const MyDrawer({super.key,required this.user}); // Pass username in the constructor
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +22,7 @@ class MyDrawer extends StatelessWidget {
           UserAccountsDrawerHeader(
             decoration: BoxDecoration(color: Colors.orangeAccent),
             accountName: Text(
-              'Welcome ${globals.username!}',
+              'Welcome ${user.username}',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -26,61 +30,63 @@ class MyDrawer extends StatelessWidget {
               ),
             ),
             accountEmail: null, // You can add an email if you want
-            currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Text(
-                globals.username![0].toUpperCase(),
-                style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-              ),
+            currentAccountPicture:  CircleAvatar(
+              backgroundImage: NetworkImage("${MyConfig.servername}/simple_app/assets/profileImage/${user.userprofileimage}"),
             ),
           ),
           _buildDrawerItem(
             context,
             title: "Home",
             icon: Icons.home,
-            destination: MainPage(),
+            destination: MainPage(user: user,),
           ),
           _buildDrawerItem(
             context,
             title: "Newsletter",
             icon: Icons.mail,
-            destination: const NewsletterPage(),
+            destination: NewsletterPage(user: user,),
           ),
           _buildDrawerItem(
             context,
             title: "Events",
             icon: Icons.event,
-            destination: const EventsPage(),
+            destination: EventsPage(user: user,),
           ),
           _buildDrawerItem(
             context,
             title: "Members",
             icon: Icons.group,
-            destination: const MainPage(), // Placeholder for Members page
+            destination: MembersPage(user: user,), // Placeholder for Members page
+          ),
+          _buildDrawerItem(
+            context,
+            title: "Membership",
+            icon: Icons.badge,
+            destination: MembershipPage(user: user,), 
           ),
           _buildDrawerItem(
             context,
             title: "Payments",
             icon: Icons.payment,
-            destination: const MainPage(), // Placeholder for Payments page
+            destination: MainPage(user: user,), // Placeholder for Payments page
           ),
           _buildDrawerItem(
             context,
             title: "Products",
             icon: Icons.shopping_cart,
-            destination: const ProductsPage(),
+            destination: ProductsPage(user: user,),
           ),
           _buildDrawerItem(
             context,
             title: "Vetting",
             icon: Icons.check_circle,
-            destination: const MainPage(), // Placeholder for Vetting page
+            destination: MainPage(user: user,), // Placeholder for Vetting page
           ),
           _buildDrawerItem(
             context,
             title: "Settings",
             icon: Icons.settings,
-            destination: const MainPage(), // Placeholder for Settings page
+            destination: MainPage(user: user,), // Placeholder for Settings page
           ),
           ListTile(
             title: const Text("Logout"),
