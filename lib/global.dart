@@ -1,3 +1,0 @@
-
-String? userId;
-String? username;
