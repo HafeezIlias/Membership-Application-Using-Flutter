@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simple_app/models/user.dart';
 import 'package:simple_app/myconfig.dart';
+import 'package:simple_app/views/Setting/setting_page.dart';
 import 'package:simple_app/views/events/events_page.dart';
 import 'package:simple_app/views/auth/login_page.dart';
 import 'package:simple_app/views/main_page.dart';
@@ -86,7 +87,7 @@ class MyDrawer extends StatelessWidget {
             context,
             title: "Settings",
             icon: Icons.settings,
-            destination: MainPage(user: user,), // Placeholder for Settings page
+            destination: SettingsPage(user: user,), // Placeholder for Settings page
           ),
           ListTile(
             title: const Text("Logout"),
