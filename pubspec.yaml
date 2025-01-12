@@ -1,5 +1,5 @@
 name: simple_app
-description: "A new Flutter project."
+description: "Membership App"
 publish_to: 'none'
 version: 0.1.0
 
@@ -39,8 +39,3 @@ flutter:
 
   uses-material-design: true
 
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/Logo Simple APP.png"
-  min_sdk_android: 21
