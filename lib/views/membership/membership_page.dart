@@ -23,11 +23,13 @@ class _MembershipPageState extends State<MembershipPage> {
   List<Membership> memberships = [];
   late double pageWidth, pageHeight;
   String status = "Loading...";
+  Map<String, dynamic>? userMembershipStatus;
 
   @override
   void initState() {
     super.initState();
     loadMemberships();
+    loadMembershipStatus();
   }
 
   @override
@@ -42,21 +44,32 @@ class _MembershipPageState extends State<MembershipPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: loadMemberships,
+            onPressed: () {
+              loadMemberships();
+              loadMembershipStatus();
+            },
           ),
         ],
       ),
-      body: memberships.isEmpty
-          ? Center(
-              child: Text(
-                status,
-                style: const TextStyle(
-                    color: Colors.red,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold),
-              ),
-            )
-          : _buildGridView(),
+      body: Column(
+        children: [
+          if (userMembershipStatus != null)
+            _buildMembershipStatus(),
+          Expanded(
+            child: memberships.isEmpty
+                ? Center(
+                    child: Text(
+                      status,
+                      style: const TextStyle(
+                          color: Colors.red,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  )
+                : _buildGridView(),
+          ),
+        ],
+      ),
       drawer: MyDrawer(user: widget.user),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -73,6 +86,60 @@ class _MembershipPageState extends State<MembershipPage> {
   }
 
   // --- Widgets ---
+  Widget _buildMembershipStatus() {
+    final status = userMembershipStatus!['status'] ?? "No Membership";
+    final startDate = userMembershipStatus!['start_date'] ?? "-";
+    final endDate = userMembershipStatus!['end_date'] ?? "-";
+
+    return Container(
+      width: double.infinity,
+      color: Colors.blueGrey.shade50,
+      padding: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.only(bottom: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Your Membership Status",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.blueGrey,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Status: $status",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: status == "Active" ? Colors.green : Colors.red,
+                ),
+              ),
+              Text(
+                "Start: $startDate",
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.blueGrey,
+                ),
+              ),
+              Text(
+                "End: $endDate",
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.blueGrey,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildGridView() {
     return GridView.builder(
       padding: const EdgeInsets.all(8.0),
@@ -106,12 +173,11 @@ class _MembershipPageState extends State<MembershipPage> {
                 "${MyConfig.servername}/simple_app/assets/membership/${memberships[index].membershipFilename}",
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Image.asset(
-                  "assets/Not Found Image.png", // Placeholder for broken links
+                  "assets/Not Found Image.png",
                   fit: BoxFit.cover,
                 ),
               ),
             ),
-            // Membership Type Name
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
@@ -120,7 +186,7 @@ class _MembershipPageState extends State<MembershipPage> {
                     const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
               ),
-            ), // Product Description (truncated)
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Text(
@@ -130,7 +196,6 @@ class _MembershipPageState extends State<MembershipPage> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            //Product Rating
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -149,7 +214,6 @@ class _MembershipPageState extends State<MembershipPage> {
                 size: 18,
               ),
             ),
-            // Price
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Row(
@@ -163,7 +227,6 @@ class _MembershipPageState extends State<MembershipPage> {
                       color: Color.fromARGB(255, 253, 157, 2),
                     ),
                   ),
-                  // Sold
                   Text(
                     "${(memberships[index].membershipsold?.toInt() ?? 0)} Sold",
                     style: const TextStyle(
@@ -213,6 +276,30 @@ class _MembershipPageState extends State<MembershipPage> {
     }
   }
 
+  Future<void> loadMembershipStatus() async {
+    try {
+      final response = await http.post(
+        Uri.parse("${MyConfig.servername}/simple_app/api/load_membership_status.php"),
+        body: {"user_id": widget.user.userid},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          setState(() {
+            userMembershipStatus = data['data'];
+          });
+        } else {
+          setState(() {
+            userMembershipStatus = null;
+          });
+        }
+      }
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
   // --- Dialogs ---
   void _showDetailsDialog(int index) {
     showDialog(
@@ -239,12 +326,11 @@ class _MembershipPageState extends State<MembershipPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => BillScreen(
-                      totalprice: double.tryParse(memberships[index].price!) ??
-                          0.0, // Ensure null safety for `price`
+                      totalprice: double.tryParse(memberships[index].price!) ?? 0.0,
                       membershipDetails: {
                         "membership_id": memberships[index].id,
                         "name": memberships[index].name,
-                      }, // Pass membership details
+                      },
                       checkoutType: "membership",
                       user: widget.user,
                     ),

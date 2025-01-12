@@ -33,6 +33,7 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     loadNewsData();
+    _updateMembershipStatus();
   }
 
   @override
@@ -318,5 +319,19 @@ Widget _buildNewsSection() {
   // --- Utility ---
   String truncateString(String str, int length) {
     return (str.length > length) ? "${str.substring(0, length)}..." : str;
+  }
+   Future<void> _updateMembershipStatus() async {
+    final url = '${MyConfig.servername}/simple_app/api/update_membership_status.php?user_id=${widget.user.userid}';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        print('Membership statuses updated successfully: ${response.body}');
+      } else {
+        print('Failed to update membership statuses: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
   }
 }
