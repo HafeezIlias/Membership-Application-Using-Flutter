@@ -22,26 +22,34 @@ class _MembershipHistoryPageState extends State<MembershipHistoryPage> {
     loadHistory();
   }
 
-  Future<void> loadHistory() async {
-    final response = await http.post(
-      Uri.parse("${MyConfig.servername}/simple_app/api/load_purchased_membership.php"),
-      body: {'user_id': widget.user.userid},
-    );
+Future<void> loadHistory() async {
+  final response = await http.post(
+    Uri.parse("${MyConfig.servername}/simple_app/api/load_purchased_membership.php"),
+    body: {'user_id': widget.user.userid},
+  );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+
+    setState(() {
+      if (data['data'] != null && data['data'] is List) {
+        // If data is not null and is a List, set it to history
         history = data['data'];
         if (history.isEmpty) {
           status = "No purchases found.";
         }
-      });
-    } else {
-      setState(() {
-        status = "Error loading history";
-      });
-    }
+      } else {
+        // Handle the case when 'data' is null or not a List
+        history = [];
+        status = "No purchases found.";
+      }
+    });
+  } else {
+    setState(() {
+      status = "Error loading history";
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +65,7 @@ class _MembershipHistoryPageState extends State<MembershipHistoryPage> {
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: Colors.red,
                 ),
               ),
             )
