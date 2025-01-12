@@ -39,7 +39,7 @@ $numofpage = ceil($totalCartItems / $limit); // Calculate the number of pages
 $sql = "SELECT c.cart_id, c.product_id, c.quantity, p.product_title, p.product_price, p.product_filename 
         FROM tbl_cart c 
         INNER JOIN tbl_products p ON c.product_id = p.product_id 
-        WHERE c.user_id = ? 
+        WHERE c.user_id = ? AND c.cart_status = 'New' 
         LIMIT $limit OFFSET $offset";
 
 // Prepare and execute the query

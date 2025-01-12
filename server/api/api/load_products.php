@@ -42,6 +42,8 @@ if ($result && $result->num_rows > 0) {
             'product_date' => $row['product_date'],
             'product_price' => $row['product_price'],
             'product_stock' => $row['product_stock'],
+            'product_rating' => $row['product_rating'],
+            'product_sold' => $row['product_sold'],
         ];
         array_push($productArray, $product);
     }

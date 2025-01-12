@@ -10,7 +10,6 @@ function verifyGoogleToken($idToken) {
     return $payload ? $payload : false;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idToken = $_POST['id_token'];
     $userData = verifyGoogleToken($idToken);
 
@@ -19,15 +18,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = $userData['name'];
         $googleId = $userData['sub']; // Google User ID
 
-        // Database connection
-        $conn = new mysqli('localhost', 'your_username', 'your_password', 'your_database');
+        include_once("dbconnect.php");
 
         if ($conn->connect_error) {
             die(json_encode(['status' => 'error', 'message' => 'Database connection failed']));
         }
 
         // Check if the user already exists
-        $stmt = $conn->prepare('SELECT * FROM users WHERE email = ?');
+        $stmt = $conn->prepare('SELECT * FROM tbl_users WHERE email = ?');
         $stmt->bind_param('s', $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -51,5 +49,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Invalid Google token']);
     }
-}
 ?>
